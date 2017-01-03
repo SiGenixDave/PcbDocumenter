@@ -11,7 +11,7 @@ namespace PCB_Documenter
         public Form1()
         {
             InitializeComponent();
-            
+
             cBoxPCBThickness.SelectedIndex = 1;
             cBoxLayers.SelectedIndex = 1;
             cBoxName.SelectedIndex = 0;
@@ -20,7 +20,6 @@ namespace PCB_Documenter
             groupBox3.Visible = false;
 
             DataGridUpdate();
-
         }
 
         private void buttonSelectInputFolder_Click(object sender, EventArgs e)
@@ -41,13 +40,14 @@ namespace PCB_Documenter
                 txtOutputDirectory.Text = folderBrowserDialog1.SelectedPath;
             }
         }
-        
+
         // Screens are actually visible group boxes
-        UInt16 activeScreen = 1;
-        const UInt16 lastScreen = 3;
+        private UInt16 activeScreen = 1;
+
+        private const UInt16 lastScreen = 3;
+
         private void buttonNext_Click(object sender, EventArgs e)
         {
-
             switch (activeScreen)
             {
                 case 1:
@@ -58,7 +58,7 @@ namespace PCB_Documenter
                     }
                     break;
             }
-            
+
             // Enable / Disable the screen buttons based on the current screen
             buttonBack.Enabled = true;
             if (activeScreen + 1 <= lastScreen)
@@ -68,33 +68,30 @@ namespace PCB_Documenter
             if (activeScreen == lastScreen)
             {
                 buttonNext.Enabled = false;
-                
+
                 //Update the list with the included files
                 UpdateDataGridItems();
 
                 DataGridUpdate();
-
             }
             SetActiveScreen();
-
         }
 
-        Boolean ValidateInfo()
+        private Boolean ValidateInfo()
         {
-            if ( (cBoxName.Text == "") || (txtPhoneOffice.Text == "") || (txtPhoneCell.Text == "") ||
-                 (txtEmail.Text == "") || (txtPCBTitle.Text == "") || 
+            if ((cBoxName.Text == "") || (txtPhoneOffice.Text == "") || (txtPhoneCell.Text == "") ||
+                 (txtEmail.Text == "") || (txtPCBTitle.Text == "") ||
                  (txtRevision.Text == "") || (txtX.Text == "") || (txtY.Text == "") ||
-                 (cBoxPCBThickness.Text == "") || (cBoxLayers.Text == "") || (cBoxPCBThickness.Text == "") || 
+                 (cBoxPCBThickness.Text == "") || (cBoxLayers.Text == "") || (cBoxPCBThickness.Text == "") ||
                  (txtInputDirectory.Text == "") || (txtOutputDirectory.Text == ""))
             {
                 MessageBox.Show("Please fill all info");
                 return false;
             }
             return true;
-
         }
 
-        void UpdateDataGridItems()
+        private void UpdateDataGridItems()
         {
             datagridItems.Clear();
 
@@ -102,10 +99,8 @@ namespace PCB_Documenter
             {
                 UpdatedFiles uf = new UpdatedFiles();
 
-
-                
                 Char[] splitIt = { '.' };
-                String []trimmedPrefix = l.SubItems[0].Text.Split(splitIt);
+                String[] trimmedPrefix = l.SubItems[0].Text.Split(splitIt);
 
                 uf.Name = txtPCBPartNumber.Text + "-" + txtRevision.Text + "." + trimmedPrefix[1];
                 uf.Name = uf.Name.ToUpper();
@@ -113,10 +108,9 @@ namespace PCB_Documenter
 
                 uf.OriginalDirectory = l.SubItems[1].Text;
                 uf.OriginalFileName = l.SubItems[0].Text;
-                
+
                 datagridItems.Add(uf);
             }
-            
         }
 
         private void buttonBack_Click(object sender, EventArgs e)
@@ -133,7 +127,6 @@ namespace PCB_Documenter
             SetActiveScreen();
         }
 
-
         private void SetActiveScreen()
         {
             switch (activeScreen)
@@ -143,22 +136,24 @@ namespace PCB_Documenter
                     groupBox2.Visible = false;
                     groupBox3.Visible = false;
                     break;
+
                 case 2:
                     groupBox1.Visible = false;
                     groupBox2.Visible = true;
                     groupBox3.Visible = false;
                     PopulateListBoxes();
                     break;
+
                 case 3:
                     groupBox1.Visible = false;
                     groupBox2.Visible = false;
                     groupBox3.Visible = true;
                     break;
+
                 default:
                     break;
             }
         }
-
 
         private void cBoxName_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -169,7 +164,7 @@ namespace PCB_Documenter
             txtPhoneCell.Text = contact[index].phoneCell;
         }
 
-        struct ContactInfo
+        private struct ContactInfo
         {
             public String name;
             public String phoneOffice;
@@ -177,41 +172,40 @@ namespace PCB_Documenter
             public String email;
         }
 
-        ContactInfo []contact = new ContactInfo[]
+        private ContactInfo[] contact = new ContactInfo[]
         {
-            new ContactInfo 
-            {   
-                name = "Tom Schneider", 
-                phoneOffice = "(412) 380-7572 x25", 
-                phoneCell = "(724) 462-5219", 
+            new ContactInfo
+            {
+                name = "Tom Schneider",
+                phoneOffice = "(412) 380-7572 x25",
+                phoneCell = "(724) 462-5219",
                 email = "tschneider@sigenix.com",
             },
 
-            new ContactInfo 
-            {   
-                name = "Nik Shaffer", 
-                phoneOffice = "(412) 380-7572 x32", 
-                phoneCell = "(412) 862-6157", 
+            new ContactInfo
+            {
+                name = "Nik Shaffer",
+                phoneOffice = "(412) 380-7572 x32",
+                phoneCell = "(412) 862-6157",
                 email = "nshaffer@sigenix.com",
-            },        
+            },
 
-            new ContactInfo 
-            {   
-                name = "Jerry Joseph", 
-                phoneOffice = "(412) 380-7572 x23", 
-                phoneCell = "(610) 393-8818", 
+            new ContactInfo
+            {
+                name = "Jerry Joseph",
+                phoneOffice = "(412) 380-7572 x23",
+                phoneCell = "(610) 393-8818",
                 email = "jjoseph@sigenix.com",
-            },        
-        
+            },
         };
 
-        struct FileDescription
+        private struct FileDescription
         {
             public String type;
             public String description;
         }
 
-        FileDescription[] file = new FileDescription[]
+        private FileDescription[] file = new FileDescription[]
         {
             new FileDescription { type = "*.gtl",                   description = "Top Copper"},
             new FileDescription { type = "*.gbl",                   description = "Bottom Copper"},
@@ -246,15 +240,12 @@ namespace PCB_Documenter
             new FileDescription { type = "Pick and Place*.txt",     description = "Pick and Place file"},
             new FileDescription { type = "*Artwork*.pdf",           description = "Artwork Drawing"},
             new FileDescription { type = "*.zip",                   description = "ODB++ Archive"},
-
         };
 
-
-        
         // Screen 2
-        String dir = "";
-        
-        void PopulateListBoxes()
+        private String dir = "";
+
+        private void PopulateListBoxes()
         {
             // Don't repopulate if input directory hasn't changed
             if (dir == txtInputDirectory.Text)
@@ -296,8 +287,6 @@ namespace PCB_Documenter
                     listViewExclude.Items.Add(lvi);
                 }
             }
-
-
         }
 
         private void buttonExclude_Click(object sender, EventArgs e)
@@ -307,7 +296,6 @@ namespace PCB_Documenter
                 listViewInclude.Items.Remove(eachItem);
                 listViewExclude.Items.Add(eachItem);
             }
-
         }
 
         private void buttonInclude_Click(object sender, EventArgs e)
@@ -330,7 +318,6 @@ namespace PCB_Documenter
             buttonInclude_Click(sender, e);
         }
 
-
         // Intercept "Enter" key that allows selected items to be moved from one listview to another
         private void listViewExclude_KeyDown(object sender, KeyEventArgs e)
         {
@@ -348,13 +335,11 @@ namespace PCB_Documenter
             }
         }
 
-
-
-
         // Screen #3
         private List<UpdatedFiles> datagridItems = new List<UpdatedFiles>();
 
         private BindingSource bs;
+
         private void DataGridUpdate()
         {
             bs = new BindingSource(datagridItems, string.Empty);
@@ -362,12 +347,10 @@ namespace PCB_Documenter
             // Hide the original directory and filename, no need to see that
             dataGridView1.Columns[2].Visible = false;
             dataGridView1.Columns[3].Visible = false;
-
         }
 
         private void buttonMoveRowUp_Click(object sender, EventArgs e)
         {
-
             int position = bs.Position;
             if (position == 0) return;  // already at top
 
@@ -387,7 +370,6 @@ namespace PCB_Documenter
 
         private void buttonMoveRowDown_Click(object sender, EventArgs e)
         {
-
             int position = bs.Position;
             if (position == bs.Count - 1) return;  // already at bottom
 
@@ -408,8 +390,11 @@ namespace PCB_Documenter
         public class UpdatedFiles
         {
             public String Name { get; set; }
+
             public String Description { get; set; }
+
             public String OriginalDirectory { get; set; }
+
             public String OriginalFileName { get; set; }
         }
 
@@ -421,9 +406,7 @@ namespace PCB_Documenter
             ZipPCBFabFIles();
         }
 
-
-
-        void ZipPCBFabFIles()
+        private void ZipPCBFabFIles()
         {
             String[] sevenZipLocation = { @"C:\Program Files (x86)\7-Zip\7z.exe", @"C:\Program Files\7-Zip\7z.exe" };
 
@@ -441,7 +424,6 @@ namespace PCB_Documenter
                 }
                 catch
                 {
-
                 }
             }
 
@@ -455,15 +437,12 @@ namespace PCB_Documenter
 
             System.Diagnostics.Process np = System.Diagnostics.Process.Start("notepad.exe", txtOutputDirectory.Text + "\\ReadMe.txt");
 
-
             String path = txtOutputDirectory.Text + "\\PCBFab";
             // Delete the directory.
             System.IO.Directory.Delete(path, true);
-
-
         }
 
-        void CreatePCBFabDirectory()
+        private void CreatePCBFabDirectory()
         {
             String path = txtOutputDirectory.Text + "\\PCBFab";
             // Determine whether the directory exists.
@@ -474,10 +453,9 @@ namespace PCB_Documenter
             }
 
             System.IO.Directory.CreateDirectory(path);
-
         }
 
-        void CopyIncludedPCBFabFiles()
+        private void CopyIncludedPCBFabFiles()
         {
             List<String> origFiles = new List<string>();
             List<String> newFiles = new List<string>();
@@ -485,7 +463,7 @@ namespace PCB_Documenter
 
             foreach (ListViewItem l in listViewInclude.Items)
             {
-                           // Dir                                       //Filename
+                // Dir                                       //Filename
                 String o = dataGridView1.Rows[i].Cells[2].Value + "\\" + dataGridView1.Rows[i].Cells[3].Value;
                 String n = txtOutputDirectory.Text + "\\PCBFab\\" + dataGridView1.Rows[i].Cells[0].Value;
 
@@ -499,22 +477,20 @@ namespace PCB_Documenter
                     {
                         n = n.Replace(".TXT", ".NCS");
                     }
-                } 
-                
+                }
+
                 System.Diagnostics.Debug.Print(o);
                 System.Diagnostics.Debug.Print(n);
                 System.IO.File.Copy(o, n, true);
 
                 i++;
             }
-
         }
 
-        void CreateReadMePCBFabFile()
+        private void CreateReadMePCBFabFile()
         {
             using (StreamWriter file = File.CreateText(txtOutputDirectory.Text + "\\PCBFab\\Readme.txt"))
             {
-
                 file.WriteLine("CONTACT: " + cBoxName.Text);
                 file.WriteLine("COMPANY: SIGENIX, INC.");
                 file.WriteLine("         100 SANDUNE DRIVE");
@@ -558,9 +534,7 @@ namespace PCB_Documenter
 
                 file.WriteLine("");
                 file.WriteLine("");
-
             }
-
         }
 
         private void saveToolStripMenuItem_Click(object sender, EventArgs e)
@@ -601,12 +575,12 @@ namespace PCB_Documenter
                 }
                 catch (IOException)
                 {
-                    MessageBox.Show("Invalid PCB Documeneter file");
+                    MessageBox.Show("Invalid PCB Documenter file");
                 }
             }
         }
 
-        void SaveParams(PCBSettings aPCB)
+        private void SaveParams(PCBSettings aPCB)
         {
             aPCB.PCBThickness = cBoxPCBThickness.Text;
             aPCB.dimX = txtX.Text;
@@ -620,10 +594,9 @@ namespace PCB_Documenter
             aPCB.pcbTitle = txtPCBTitle.Text;
             aPCB.phoneCell = txtPhoneCell.Text;
             aPCB.phoneOffice = txtPhoneOffice.Text;
-
         }
 
-        void OpenParams(PCBSettings aPCB)
+        private void OpenParams(PCBSettings aPCB)
         {
             cBoxPCBThickness.Text = aPCB.PCBThickness;
             txtX.Text = aPCB.dimX;
@@ -637,7 +610,6 @@ namespace PCB_Documenter
             txtPCBTitle.Text = aPCB.pcbTitle;
             txtPhoneCell.Text = aPCB.phoneCell;
             txtPhoneOffice.Text = aPCB.phoneOffice;
-
         }
 
         private void aboutToolStripMenuItem1_Click(object sender, EventArgs e)
@@ -645,7 +617,5 @@ namespace PCB_Documenter
             AboutBox about = new AboutBox();
             about.ShowDialog();
         }
-
-
     }
 }
