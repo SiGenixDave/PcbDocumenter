@@ -9,7 +9,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("PCB Documenter")]
-[assembly: AssemblyCopyright("Copyright © SiGenix 2012-2013")]
+[assembly: AssemblyCopyright("Copyright © SiGenix 2012-2017")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

@@ -15,6 +15,9 @@ namespace PCB_Documenter
         public String phoneCell
         { get; set; }
 
+        public String pcbEnabled
+        { get; set; }
+
         public String pcbTitle
         { get; set; }
 
@@ -22,6 +25,18 @@ namespace PCB_Documenter
         { get; set; }
 
         public String pcbRevision
+        { get; set; }
+
+        public String assemblyEnabled
+        { get; set; }
+
+        public String assemblyTitle
+        { get; set; }
+
+        public String assemblyPartNumber
+        { get; set; }
+
+        public String assemblyRevision
         { get; set; }
 
         public String dimX

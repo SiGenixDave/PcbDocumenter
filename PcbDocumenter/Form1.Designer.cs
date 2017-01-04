@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.cBoxName = new System.Windows.Forms.ComboBox();
+            this.dropBoxName = new System.Windows.Forms.ComboBox();
             this.label1 = new System.Windows.Forms.Label();
             this.txtPhoneOffice = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
@@ -39,7 +39,7 @@
             this.label5 = new System.Windows.Forms.Label();
             this.txtPCBPartNumber = new System.Windows.Forms.TextBox();
             this.label6 = new System.Windows.Forms.Label();
-            this.txtRevision = new System.Windows.Forms.TextBox();
+            this.txtPCBRevision = new System.Windows.Forms.TextBox();
             this.label7 = new System.Windows.Forms.Label();
             this.label8 = new System.Windows.Forms.Label();
             this.label9 = new System.Windows.Forms.Label();
@@ -55,8 +55,16 @@
             this.buttonSelectInputFolder = new System.Windows.Forms.Button();
             this.txtInputDirectory = new System.Windows.Forms.TextBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.txtOutputDirectory = new System.Windows.Forms.TextBox();
-            this.buttonSelectOutputFolder = new System.Windows.Forms.Button();
+            this.groupBox5 = new System.Windows.Forms.GroupBox();
+            this.cBoxAssembly = new System.Windows.Forms.CheckBox();
+            this.txtAssemblyTitle = new System.Windows.Forms.TextBox();
+            this.txtAssemblyPartNumber = new System.Windows.Forms.TextBox();
+            this.txtAssemblyRevision = new System.Windows.Forms.TextBox();
+            this.label11 = new System.Windows.Forms.Label();
+            this.label13 = new System.Windows.Forms.Label();
+            this.label14 = new System.Windows.Forms.Label();
+            this.groupBox4 = new System.Windows.Forms.GroupBox();
+            this.cBoxPCB = new System.Windows.Forms.CheckBox();
             this.buttonBack = new System.Windows.Forms.Button();
             this.buttonNext = new System.Windows.Forms.Button();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
@@ -64,14 +72,14 @@
             this.label19 = new System.Windows.Forms.Label();
             this.buttonInclude = new System.Windows.Forms.Button();
             this.listViewExclude = new System.Windows.Forms.ListView();
-            this.columnHeader1 = new System.Windows.Forms.ColumnHeader();
-            this.columnHeader2 = new System.Windows.Forms.ColumnHeader();
-            this.columnHeader3 = new System.Windows.Forms.ColumnHeader();
+            this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnHeader2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnHeader3 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.buttonExclude = new System.Windows.Forms.Button();
             this.listViewInclude = new System.Windows.Forms.ListView();
-            this.FileName = new System.Windows.Forms.ColumnHeader();
-            this.Directory = new System.Windows.Forms.ColumnHeader();
-            this.Description = new System.Windows.Forms.ColumnHeader();
+            this.FileName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.Directory = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.Description = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.buttonGenerate = new System.Windows.Forms.Button();
             this.buttonMoveRowDown = new System.Windows.Forms.Button();
@@ -87,24 +95,22 @@
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.groupBox1.SuspendLayout();
+            this.groupBox5.SuspendLayout();
+            this.groupBox4.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
-            // cBoxName
+            // dropBoxName
             // 
-            this.cBoxName.FormattingEnabled = true;
-            this.cBoxName.Items.AddRange(new object[] {
-            "Tom Schneider",
-            "Nik Shaffer",
-            "Jerry Joseph"});
-            this.cBoxName.Location = new System.Drawing.Point(85, 35);
-            this.cBoxName.Name = "cBoxName";
-            this.cBoxName.Size = new System.Drawing.Size(121, 21);
-            this.cBoxName.TabIndex = 0;
-            this.cBoxName.SelectedIndexChanged += new System.EventHandler(this.cBoxName_SelectedIndexChanged);
+            this.dropBoxName.FormattingEnabled = true;
+            this.dropBoxName.Location = new System.Drawing.Point(85, 35);
+            this.dropBoxName.Name = "dropBoxName";
+            this.dropBoxName.Size = new System.Drawing.Size(121, 21);
+            this.dropBoxName.TabIndex = 0;
+            this.dropBoxName.SelectedIndexChanged += new System.EventHandler(this.dropBoxName_SelectedIndexChanged);
             // 
             // label1
             // 
@@ -150,15 +156,15 @@
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(124, 159);
+            this.label4.Location = new System.Drawing.Point(34, 38);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(51, 13);
+            this.label4.Size = new System.Drawing.Size(27, 13);
             this.label4.TabIndex = 7;
-            this.label4.Text = "PCB Title";
+            this.label4.Text = "Title";
             // 
             // txtPCBTitle
             // 
-            this.txtPCBTitle.Location = new System.Drawing.Point(184, 152);
+            this.txtPCBTitle.Location = new System.Drawing.Point(73, 35);
             this.txtPCBTitle.Name = "txtPCBTitle";
             this.txtPCBTitle.Size = new System.Drawing.Size(121, 20);
             this.txtPCBTitle.TabIndex = 6;
@@ -166,15 +172,15 @@
             // label5
             // 
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(118, 185);
+            this.label5.Location = new System.Drawing.Point(25, 61);
             this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(60, 13);
+            this.label5.Size = new System.Drawing.Size(36, 13);
             this.label5.TabIndex = 9;
-            this.label5.Text = "PCB Part #";
+            this.label5.Text = "Part #";
             // 
             // txtPCBPartNumber
             // 
-            this.txtPCBPartNumber.Location = new System.Drawing.Point(184, 178);
+            this.txtPCBPartNumber.Location = new System.Drawing.Point(73, 58);
             this.txtPCBPartNumber.Name = "txtPCBPartNumber";
             this.txtPCBPartNumber.Size = new System.Drawing.Size(121, 20);
             this.txtPCBPartNumber.TabIndex = 8;
@@ -182,18 +188,18 @@
             // label6
             // 
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(106, 211);
+            this.label6.Location = new System.Drawing.Point(17, 83);
             this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(72, 13);
+            this.label6.Size = new System.Drawing.Size(48, 13);
             this.label6.TabIndex = 11;
-            this.label6.Text = "PCB Revision";
+            this.label6.Text = "Revision";
             // 
-            // txtRevision
+            // txtPCBRevision
             // 
-            this.txtRevision.Location = new System.Drawing.Point(184, 204);
-            this.txtRevision.Name = "txtRevision";
-            this.txtRevision.Size = new System.Drawing.Size(121, 20);
-            this.txtRevision.TabIndex = 10;
+            this.txtPCBRevision.Location = new System.Drawing.Point(73, 80);
+            this.txtPCBRevision.Name = "txtPCBRevision";
+            this.txtPCBRevision.Size = new System.Drawing.Size(121, 20);
+            this.txtPCBRevision.TabIndex = 10;
             // 
             // label7
             // 
@@ -304,7 +310,7 @@
             // 
             // buttonSelectInputFolder
             // 
-            this.buttonSelectInputFolder.Location = new System.Drawing.Point(22, 236);
+            this.buttonSelectInputFolder.Location = new System.Drawing.Point(16, 275);
             this.buttonSelectInputFolder.Name = "buttonSelectInputFolder";
             this.buttonSelectInputFolder.Size = new System.Drawing.Size(90, 39);
             this.buttonSelectInputFolder.TabIndex = 34;
@@ -314,17 +320,17 @@
             // 
             // txtInputDirectory
             // 
-            this.txtInputDirectory.Location = new System.Drawing.Point(127, 247);
+            this.txtInputDirectory.Location = new System.Drawing.Point(121, 286);
             this.txtInputDirectory.Name = "txtInputDirectory";
             this.txtInputDirectory.Size = new System.Drawing.Size(324, 20);
             this.txtInputDirectory.TabIndex = 35;
             // 
             // groupBox1
             // 
-            this.groupBox1.Controls.Add(this.txtOutputDirectory);
-            this.groupBox1.Controls.Add(this.buttonSelectOutputFolder);
+            this.groupBox1.Controls.Add(this.groupBox5);
+            this.groupBox1.Controls.Add(this.groupBox4);
             this.groupBox1.Controls.Add(this.txtInputDirectory);
-            this.groupBox1.Controls.Add(this.cBoxName);
+            this.groupBox1.Controls.Add(this.dropBoxName);
             this.groupBox1.Controls.Add(this.buttonSelectInputFolder);
             this.groupBox1.Controls.Add(this.label1);
             this.groupBox1.Controls.Add(this.label18);
@@ -333,14 +339,8 @@
             this.groupBox1.Controls.Add(this.label2);
             this.groupBox1.Controls.Add(this.txtEmail);
             this.groupBox1.Controls.Add(this.label3);
-            this.groupBox1.Controls.Add(this.txtPCBTitle);
             this.groupBox1.Controls.Add(this.cBoxPCBThickness);
-            this.groupBox1.Controls.Add(this.label4);
             this.groupBox1.Controls.Add(this.cBoxLayers);
-            this.groupBox1.Controls.Add(this.txtPCBPartNumber);
-            this.groupBox1.Controls.Add(this.label5);
-            this.groupBox1.Controls.Add(this.txtRevision);
-            this.groupBox1.Controls.Add(this.label6);
             this.groupBox1.Controls.Add(this.label7);
             this.groupBox1.Controls.Add(this.label12);
             this.groupBox1.Controls.Add(this.label8);
@@ -350,27 +350,110 @@
             this.groupBox1.Controls.Add(this.txtY);
             this.groupBox1.Location = new System.Drawing.Point(12, 34);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(547, 329);
+            this.groupBox1.Size = new System.Drawing.Size(547, 338);
             this.groupBox1.TabIndex = 36;
             this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "Screen #1";
+            this.groupBox1.Text = "Home";
             // 
-            // txtOutputDirectory
+            // groupBox5
             // 
-            this.txtOutputDirectory.Location = new System.Drawing.Point(127, 295);
-            this.txtOutputDirectory.Name = "txtOutputDirectory";
-            this.txtOutputDirectory.Size = new System.Drawing.Size(324, 20);
-            this.txtOutputDirectory.TabIndex = 37;
+            this.groupBox5.Controls.Add(this.cBoxAssembly);
+            this.groupBox5.Controls.Add(this.txtAssemblyTitle);
+            this.groupBox5.Controls.Add(this.txtAssemblyPartNumber);
+            this.groupBox5.Controls.Add(this.txtAssemblyRevision);
+            this.groupBox5.Controls.Add(this.label11);
+            this.groupBox5.Controls.Add(this.label13);
+            this.groupBox5.Controls.Add(this.label14);
+            this.groupBox5.Location = new System.Drawing.Point(307, 157);
+            this.groupBox5.Name = "groupBox5";
+            this.groupBox5.Size = new System.Drawing.Size(200, 107);
+            this.groupBox5.TabIndex = 37;
+            this.groupBox5.TabStop = false;
             // 
-            // buttonSelectOutputFolder
+            // cBoxAssembly
             // 
-            this.buttonSelectOutputFolder.Location = new System.Drawing.Point(22, 284);
-            this.buttonSelectOutputFolder.Name = "buttonSelectOutputFolder";
-            this.buttonSelectOutputFolder.Size = new System.Drawing.Size(90, 39);
-            this.buttonSelectOutputFolder.TabIndex = 36;
-            this.buttonSelectOutputFolder.Text = "Select Output Folder";
-            this.buttonSelectOutputFolder.UseVisualStyleBackColor = true;
-            this.buttonSelectOutputFolder.Click += new System.EventHandler(this.buttonSelectOutputFolder_Click);
+            this.cBoxAssembly.AutoSize = true;
+            this.cBoxAssembly.Location = new System.Drawing.Point(7, 8);
+            this.cBoxAssembly.Name = "cBoxAssembly";
+            this.cBoxAssembly.Size = new System.Drawing.Size(70, 17);
+            this.cBoxAssembly.TabIndex = 12;
+            this.cBoxAssembly.Text = "Assembly";
+            this.cBoxAssembly.UseVisualStyleBackColor = true;
+            this.cBoxAssembly.CheckedChanged += new System.EventHandler(this.cBoxAssembly_CheckedChanged);
+            // 
+            // txtAssemblyTitle
+            // 
+            this.txtAssemblyTitle.Location = new System.Drawing.Point(73, 35);
+            this.txtAssemblyTitle.Name = "txtAssemblyTitle";
+            this.txtAssemblyTitle.Size = new System.Drawing.Size(121, 20);
+            this.txtAssemblyTitle.TabIndex = 6;
+            // 
+            // txtAssemblyPartNumber
+            // 
+            this.txtAssemblyPartNumber.Location = new System.Drawing.Point(73, 58);
+            this.txtAssemblyPartNumber.Name = "txtAssemblyPartNumber";
+            this.txtAssemblyPartNumber.Size = new System.Drawing.Size(121, 20);
+            this.txtAssemblyPartNumber.TabIndex = 8;
+            // 
+            // txtAssemblyRevision
+            // 
+            this.txtAssemblyRevision.Location = new System.Drawing.Point(73, 80);
+            this.txtAssemblyRevision.Name = "txtAssemblyRevision";
+            this.txtAssemblyRevision.Size = new System.Drawing.Size(121, 20);
+            this.txtAssemblyRevision.TabIndex = 10;
+            // 
+            // label11
+            // 
+            this.label11.AutoSize = true;
+            this.label11.Location = new System.Drawing.Point(17, 83);
+            this.label11.Name = "label11";
+            this.label11.Size = new System.Drawing.Size(48, 13);
+            this.label11.TabIndex = 11;
+            this.label11.Text = "Revision";
+            // 
+            // label13
+            // 
+            this.label13.AutoSize = true;
+            this.label13.Location = new System.Drawing.Point(25, 61);
+            this.label13.Name = "label13";
+            this.label13.Size = new System.Drawing.Size(36, 13);
+            this.label13.TabIndex = 9;
+            this.label13.Text = "Part #";
+            // 
+            // label14
+            // 
+            this.label14.AutoSize = true;
+            this.label14.Location = new System.Drawing.Point(34, 38);
+            this.label14.Name = "label14";
+            this.label14.Size = new System.Drawing.Size(27, 13);
+            this.label14.TabIndex = 7;
+            this.label14.Text = "Title";
+            // 
+            // groupBox4
+            // 
+            this.groupBox4.Controls.Add(this.cBoxPCB);
+            this.groupBox4.Controls.Add(this.txtPCBTitle);
+            this.groupBox4.Controls.Add(this.txtPCBPartNumber);
+            this.groupBox4.Controls.Add(this.txtPCBRevision);
+            this.groupBox4.Controls.Add(this.label6);
+            this.groupBox4.Controls.Add(this.label5);
+            this.groupBox4.Controls.Add(this.label4);
+            this.groupBox4.Location = new System.Drawing.Point(37, 157);
+            this.groupBox4.Name = "groupBox4";
+            this.groupBox4.Size = new System.Drawing.Size(200, 107);
+            this.groupBox4.TabIndex = 36;
+            this.groupBox4.TabStop = false;
+            // 
+            // cBoxPCB
+            // 
+            this.cBoxPCB.AutoSize = true;
+            this.cBoxPCB.Location = new System.Drawing.Point(7, 8);
+            this.cBoxPCB.Name = "cBoxPCB";
+            this.cBoxPCB.Size = new System.Drawing.Size(47, 17);
+            this.cBoxPCB.TabIndex = 12;
+            this.cBoxPCB.Text = "PCB";
+            this.cBoxPCB.UseVisualStyleBackColor = true;
+            this.cBoxPCB.CheckedChanged += new System.EventHandler(this.cBoxPCB_CheckedChanged);
             // 
             // buttonBack
             // 
@@ -524,7 +607,7 @@
             this.groupBox3.Controls.Add(this.dataGridView1);
             this.groupBox3.Location = new System.Drawing.Point(12, 34);
             this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(547, 329);
+            this.groupBox3.Size = new System.Drawing.Size(547, 338);
             this.groupBox3.TabIndex = 38;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Screen #3";
@@ -633,7 +716,6 @@
             // openFileDialog1
             // 
             this.openFileDialog1.DefaultExt = "xml";
-            this.openFileDialog1.FileName = "openFileDialog1";
             this.openFileDialog1.Filter = "XML files (*.xml|*.xml";
             // 
             // Form1
@@ -643,15 +725,19 @@
             this.ClientSize = new System.Drawing.Size(589, 413);
             this.Controls.Add(this.buttonNext);
             this.Controls.Add(this.buttonBack);
+            this.Controls.Add(this.menuStrip1);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.groupBox3);
             this.Controls.Add(this.groupBox2);
-            this.Controls.Add(this.menuStrip1);
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "Form1";
             this.Text = "PCB Document Creator";
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
+            this.groupBox5.ResumeLayout(false);
+            this.groupBox5.PerformLayout();
+            this.groupBox4.ResumeLayout(false);
+            this.groupBox4.PerformLayout();
             this.groupBox2.ResumeLayout(false);
             this.groupBox2.PerformLayout();
             this.groupBox3.ResumeLayout(false);
@@ -665,7 +751,7 @@
 
         #endregion
 
-        private System.Windows.Forms.ComboBox cBoxName;
+        private System.Windows.Forms.ComboBox dropBoxName;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox txtPhoneOffice;
         private System.Windows.Forms.Label label2;
@@ -676,7 +762,7 @@
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.TextBox txtPCBPartNumber;
         private System.Windows.Forms.Label label6;
-        private System.Windows.Forms.TextBox txtRevision;
+        private System.Windows.Forms.TextBox txtPCBRevision;
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.Label label9;
@@ -712,8 +798,6 @@
         private System.Windows.Forms.Button buttonMoveRowDown;
         private System.Windows.Forms.Button buttonMoveRowUp;
         private System.Windows.Forms.Button buttonGenerate;
-        private System.Windows.Forms.TextBox txtOutputDirectory;
-        private System.Windows.Forms.Button buttonSelectOutputFolder;
         private System.Windows.Forms.MenuStrip menuStrip1;
         private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem openToolStripMenuItem;
@@ -723,6 +807,16 @@
         private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem1;
         private System.Windows.Forms.SaveFileDialog saveFileDialog1;
         private System.Windows.Forms.OpenFileDialog openFileDialog1;
+        private System.Windows.Forms.GroupBox groupBox4;
+        private System.Windows.Forms.CheckBox cBoxPCB;
+        private System.Windows.Forms.GroupBox groupBox5;
+        private System.Windows.Forms.CheckBox cBoxAssembly;
+        private System.Windows.Forms.TextBox txtAssemblyTitle;
+        private System.Windows.Forms.TextBox txtAssemblyPartNumber;
+        private System.Windows.Forms.TextBox txtAssemblyRevision;
+        private System.Windows.Forms.Label label11;
+        private System.Windows.Forms.Label label13;
+        private System.Windows.Forms.Label label14;
     }
 }
 

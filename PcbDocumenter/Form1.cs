@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -8,82 +9,158 @@ namespace PCB_Documenter
 {
     public partial class Form1 : Form
     {
+        enum ActiveScreen
+        {
+            HOME,
+            PCB_FILE_SELECTION,
+            PCB_DOC_GEN,
+            ASSEMBLY_FILE_SELECTION,
+            ASSEMBLY_DOC_GEN,
+        }
+
+
+        // Screens are actually visible group boxes
+        private ActiveScreen m_ActiveScreen = ActiveScreen.HOME;
+        private ActiveScreen[] m_ValidScreens;
+        private UInt16 m_ActiveScreenIndex;
+        private String m_OutputDirectory;
+        
+        
         public Form1()
         {
             InitializeComponent();
 
             cBoxPCBThickness.SelectedIndex = 1;
             cBoxLayers.SelectedIndex = 1;
-            cBoxName.SelectedIndex = 0;
             groupBox1.Visible = true;
             groupBox2.Visible = false;
             groupBox3.Visible = false;
 
+            ManageCheckGroupBox(cBoxPCB, groupBox4);
+            ManageCheckGroupBox(cBoxAssembly, groupBox5);
+
+            PopulateNameDropBox();
+
             DataGridUpdate();
+        }
+
+        private void PopulateNameDropBox()
+        {
+            foreach (ContactInfo c in m_ContactInfo)
+            {
+                dropBoxName.Items.Add(c.name);
+            }
+            dropBoxName.SelectedIndex = 0;
         }
 
         private void buttonSelectInputFolder_Click(object sender, EventArgs e)
         {
-            // Look in this folder and all subfolders for files
+            // Look in this folder and all sub-folders for files
             if (folderBrowserDialog1.ShowDialog() == DialogResult.OK)
             {
                 txtInputDirectory.Text = folderBrowserDialog1.SelectedPath;
-                txtOutputDirectory.Text = txtInputDirectory.Text + @"\Deliverables";
+                m_OutputDirectory = txtInputDirectory.Text + @"\Deliverables";
             }
         }
 
-        private void buttonSelectOutputFolder_Click(object sender, EventArgs e)
-        {
-            // Copy all output files here
-            if (folderBrowserDialog1.ShowDialog() == DialogResult.OK)
-            {
-                txtOutputDirectory.Text = folderBrowserDialog1.SelectedPath;
-            }
-        }
-
-        // Screens are actually visible group boxes
-        private UInt16 activeScreen = 1;
-
-        private const UInt16 lastScreen = 3;
 
         private void buttonNext_Click(object sender, EventArgs e)
         {
-            switch (activeScreen)
+            SetNextScreen();
+        }
+
+        private void SetNextScreen()
+        {
+            // Handle the home screen
+            if (m_ActiveScreen == ActiveScreen.HOME)
             {
-                case 1:
-                    // Verify all information has been added to the text and combo boxes
-                    if (ValidateInfo() == false)
+                // Verify all information has been added to the text and combo boxes
+                if (ValidateInfo() == false)
+                {
+                    return;
+                }
+
+                m_ActiveScreenIndex = 0;
+                if (cBoxPCB.Checked)
+                {
+                    m_ValidScreens = new ActiveScreen[] 
+                                    { ActiveScreen.HOME, 
+                                      ActiveScreen.PCB_FILE_SELECTION, 
+                                      ActiveScreen.PCB_DOC_GEN };
+                }
+
+                if (cBoxAssembly.Checked)
+                {
+                    if (cBoxPCB.Checked)
                     {
-                        return;
+                        m_ValidScreens = new ActiveScreen[] 
+                                    { ActiveScreen.HOME, 
+                                      ActiveScreen.PCB_FILE_SELECTION, 
+                                      ActiveScreen.PCB_DOC_GEN,
+                                      ActiveScreen.ASSEMBLY_FILE_SELECTION,
+                                      ActiveScreen.ASSEMBLY_DOC_GEN };
                     }
-                    break;
+                    else
+                    {
+                        m_ValidScreens = new ActiveScreen[] 
+                                    { ActiveScreen.HOME, 
+                                      ActiveScreen.ASSEMBLY_FILE_SELECTION,
+                                      ActiveScreen.ASSEMBLY_DOC_GEN };
+                    }
+                }
             }
 
-            // Enable / Disable the screen buttons based on the current screen
+            // Enable the "Back" button since we may be moving forward
             buttonBack.Enabled = true;
-            if (activeScreen + 1 <= lastScreen)
-            {
-                activeScreen++;
-            }
-            if (activeScreen == lastScreen)
+            m_ActiveScreenIndex++;
+            if (m_ActiveScreenIndex >= m_ValidScreens.Length - 1)
             {
                 buttonNext.Enabled = false;
+            }
 
-                //Update the list with the included files
+            m_ActiveScreen = m_ValidScreens[m_ActiveScreenIndex];
+
+            if ((m_ActiveScreen == ActiveScreen.PCB_DOC_GEN) ||
+                (m_ActiveScreen == ActiveScreen.ASSEMBLY_DOC_GEN))
+            {
+                // Update the list with the included files
                 UpdateDataGridItems();
-
                 DataGridUpdate();
             }
+
             SetActiveScreen();
         }
 
         private Boolean ValidateInfo()
         {
-            if ((cBoxName.Text == "") || (txtPhoneOffice.Text == "") || (txtPhoneCell.Text == "") ||
-                 (txtEmail.Text == "") || (txtPCBTitle.Text == "") ||
-                 (txtRevision.Text == "") || (txtX.Text == "") || (txtY.Text == "") ||
+            if (!cBoxPCB.Checked && !cBoxAssembly.Checked)
+            {
+                MessageBox.Show("At least 1 package (PCB/Assembly) must be selected");
+                return false;
+            }
+
+            if (cBoxPCB.Checked)
+            {
+                if ((txtPCBTitle.Text == "") || (txtPCBRevision.Text == "") || (txtPCBPartNumber.Text == ""))
+                {
+                    MessageBox.Show("Please fill all info for PCB");
+                    return false;
+                }
+            }
+
+            if (cBoxAssembly.Checked)
+            {
+                if ((txtAssemblyTitle.Text == "") || (txtAssemblyRevision.Text == "") || (txtAssemblyPartNumber.Text == ""))
+                {
+                    MessageBox.Show("Please fill all info for Assembly");
+                    return false;
+                }
+            }
+
+            if ((dropBoxName.Text == "") || (txtPhoneOffice.Text == "") || (txtPhoneCell.Text == "") ||
+                 (txtEmail.Text == "") || (txtX.Text == "") || (txtY.Text == "") ||
                  (cBoxPCBThickness.Text == "") || (cBoxLayers.Text == "") || (cBoxPCBThickness.Text == "") ||
-                 (txtInputDirectory.Text == "") || (txtOutputDirectory.Text == ""))
+                 (txtInputDirectory.Text == ""))
             {
                 MessageBox.Show("Please fill all info");
                 return false;
@@ -93,61 +170,132 @@ namespace PCB_Documenter
 
         private void UpdateDataGridItems()
         {
-            datagridItems.Clear();
+            m_DatagridItems.Clear();
 
             foreach (ListViewItem l in listViewInclude.Items)
             {
                 UpdatedFiles uf = new UpdatedFiles();
 
                 Char[] splitIt = { '.' };
-                String[] trimmedPrefix = l.SubItems[0].Text.Split(splitIt);
+                String[] prefixExtension = l.SubItems[0].Text.Split(splitIt);
 
-                uf.Name = txtPCBPartNumber.Text + "-" + txtRevision.Text + "." + trimmedPrefix[1];
+                HandleSpecialPcbFilenames(prefixExtension);
+
+                if (m_ActiveScreen == ActiveScreen.PCB_DOC_GEN)
+                {
+                    uf.Name = txtPCBPartNumber.Text + "-" + txtPCBRevision.Text + "." + prefixExtension[1];
+                }
+                else
+                {
+                    String appendPrefix = "";
+                    String prefix = prefixExtension[0].ToUpper();
+                    String ext = prefixExtension[1].ToUpper();
+                    if ((prefix == "BILL OF MATERIALS") && (ext == "XLS"))
+                    {
+                        appendPrefix = " BOM";
+                    }
+                    else if ((prefix == "SCHEMATIC PRINTS") && (ext == "PDF"))
+                    {
+                        appendPrefix = " SCH";
+                    }
+                    if (ext == "ZIP")
+                    {
+                        // Intentionally don't rename
+                        uf.Name = prefix + "." + ext;
+                    }
+                    else
+                    {
+                        uf.Name = txtAssemblyPartNumber.Text + "-" + txtAssemblyRevision.Text + appendPrefix + "." + prefixExtension[1];
+                    }
+                }
                 uf.Name = uf.Name.ToUpper();
                 uf.Description = l.SubItems[2].Text;
 
                 uf.OriginalDirectory = l.SubItems[1].Text;
                 uf.OriginalFileName = l.SubItems[0].Text;
 
-                datagridItems.Add(uf);
+                m_DatagridItems.Add(uf);
             }
+        }
+
+        private void HandleSpecialPcbFilenames(String[] fileName)
+        {
+            String prefix = fileName[0].ToUpper();
+            String ext = fileName[1].ToUpper();
+
+            String[,] pcbSpecialNames = new String[,]
+            {
+                { "NC DRILL" , "TXT", "NCD" },
+                { "NC DRILL-ROUNDHOLES" , "TXT", "NCD"},
+                { "NC DRILL-SLOTHOLES" , "TXT", "NCS"},
+                { "PICK AND PLACE" , "TXT", "PNP"},
+            };
+
+            for (UInt16 i = 0; i < pcbSpecialNames.GetLength(0); i++)
+            {
+                // If the file name matches the a "special" file, the extension needs
+                // to be changed
+                if ((prefix == pcbSpecialNames[i, 0]) && (ext == pcbSpecialNames[i, 1]))
+                {
+                    fileName[1] = pcbSpecialNames[i, 2];
+                    return;
+                }
+            }
+
         }
 
         private void buttonBack_Click(object sender, EventArgs e)
         {
             buttonNext.Enabled = true;
-            if (activeScreen - 1 >= 1)
-            {
-                activeScreen--;
-            }
-            if (activeScreen == 1)
+            m_ActiveScreenIndex--;
+            if (m_ActiveScreenIndex == 0)
             {
                 buttonBack.Enabled = false;
             }
+            m_ActiveScreen = m_ValidScreens[m_ActiveScreenIndex];
             SetActiveScreen();
         }
 
         private void SetActiveScreen()
         {
-            switch (activeScreen)
+            switch (m_ActiveScreen)
             {
-                case 1:
+                case ActiveScreen.HOME:
                     groupBox1.Visible = true;
                     groupBox2.Visible = false;
                     groupBox3.Visible = false;
                     break;
 
-                case 2:
+                case ActiveScreen.PCB_FILE_SELECTION:
+                case ActiveScreen.ASSEMBLY_FILE_SELECTION:
                     groupBox1.Visible = false;
                     groupBox2.Visible = true;
                     groupBox3.Visible = false;
-                    PopulateListBoxes();
+                    if (m_ActiveScreen == ActiveScreen.PCB_FILE_SELECTION)
+                    {
+                        groupBox2.Text = "PCB File Selection";
+                        PopulateListBoxes(m_PcbFileDescription);
+                    }
+                    else
+                    {
+                        groupBox2.Text = "Assembly File Selection";
+                        PopulateListBoxes(m_AssemblyFileDescription);
+                    }
                     break;
 
-                case 3:
+                case ActiveScreen.PCB_DOC_GEN:
+                case ActiveScreen.ASSEMBLY_DOC_GEN: 
                     groupBox1.Visible = false;
                     groupBox2.Visible = false;
                     groupBox3.Visible = true;
+                    if (m_ActiveScreen == ActiveScreen.PCB_DOC_GEN)
+                    {
+                        groupBox3.Text = "PCB Document Generation";
+                    }
+                    else
+                    {
+                        groupBox3.Text = "Assembly Document Generation";
+                    }
                     break;
 
                 default:
@@ -155,13 +303,13 @@ namespace PCB_Documenter
             }
         }
 
-        private void cBoxName_SelectedIndexChanged(object sender, EventArgs e)
+        private void dropBoxName_SelectedIndexChanged(object sender, EventArgs e)
         {
-            Int32 index = cBoxName.SelectedIndex;
+            Int32 index = dropBoxName.SelectedIndex;
 
-            txtEmail.Text = contact[index].email;
-            txtPhoneOffice.Text = contact[index].phoneOffice;
-            txtPhoneCell.Text = contact[index].phoneCell;
+            txtEmail.Text = m_ContactInfo[index].email;
+            txtPhoneOffice.Text = m_ContactInfo[index].phoneOffice;
+            txtPhoneCell.Text = m_ContactInfo[index].phoneCell;
         }
 
         private struct ContactInfo
@@ -172,12 +320,12 @@ namespace PCB_Documenter
             public String email;
         }
 
-        private ContactInfo[] contact = new ContactInfo[]
+        private ContactInfo[] m_ContactInfo = new ContactInfo[]
         {
             new ContactInfo
             {
                 name = "Tom Schneider",
-                phoneOffice = "(412) 380-7572 x25",
+                phoneOffice = "(412) 380-7572",
                 phoneCell = "(724) 462-5219",
                 email = "tschneider@sigenix.com",
             },
@@ -185,7 +333,7 @@ namespace PCB_Documenter
             new ContactInfo
             {
                 name = "Nik Shaffer",
-                phoneOffice = "(412) 380-7572 x32",
+                phoneOffice = "(412) 380-7572",
                 phoneCell = "(412) 862-6157",
                 email = "nshaffer@sigenix.com",
             },
@@ -193,8 +341,8 @@ namespace PCB_Documenter
             new ContactInfo
             {
                 name = "Jerry Joseph",
-                phoneOffice = "(412) 380-7572 x23",
-                phoneCell = "(610) 393-8818",
+                phoneOffice = "(412) 380-7572",
+                phoneCell = "(724) 771-6749",
                 email = "jjoseph@sigenix.com",
             },
         };
@@ -205,7 +353,7 @@ namespace PCB_Documenter
             public String description;
         }
 
-        private FileDescription[] file = new FileDescription[]
+        private FileDescription[] m_PcbFileDescription = new FileDescription[]
         {
             new FileDescription { type = "*.gtl",                   description = "Top Copper"},
             new FileDescription { type = "*.gbl",                   description = "Bottom Copper"},
@@ -217,6 +365,14 @@ namespace PCB_Documenter
             new FileDescription { type = "*.g6",                    description = "Inner Signal Layer 6"},
             new FileDescription { type = "*.g7",                    description = "Inner Signal Layer 7"},
             new FileDescription { type = "*.g8",                    description = "Inner Signal Layer 8"},
+            new FileDescription { type = "*.g9",                    description = "Inner Signal Layer 9"},
+            new FileDescription { type = "*.g10",                    description = "Inner Signal Layer 10"},
+            new FileDescription { type = "*.g11",                    description = "Inner Signal Layer 11"},
+            new FileDescription { type = "*.g12",                    description = "Inner Signal Layer 12"},
+            new FileDescription { type = "*.g13",                    description = "Inner Signal Layer 13"},
+            new FileDescription { type = "*.g14",                    description = "Inner Signal Layer 14"},
+            new FileDescription { type = "*.g15",                    description = "Inner Signal Layer 15"},
+            new FileDescription { type = "*.g16",                    description = "Inner Signal Layer 16"},
             new FileDescription { type = "*.gp1",                   description = "Inner Plane Layer 1"},
             new FileDescription { type = "*.gp2",                   description = "Inner Plane Layer 2"},
             new FileDescription { type = "*.gp3",                   description = "Inner Plane Layer 3"},
@@ -225,6 +381,46 @@ namespace PCB_Documenter
             new FileDescription { type = "*.gp6",                   description = "Inner Plane Layer 6"},
             new FileDescription { type = "*.gp7",                   description = "Inner Plane Layer 7"},
             new FileDescription { type = "*.gp8",                   description = "Inner Plane Layer 8"},
+            new FileDescription { type = "*.gp9",                   description = "Inner Plane Layer 9"},
+            new FileDescription { type = "*.gp10",                   description = "Inner Plane Layer 10"},
+            new FileDescription { type = "*.gp11",                   description = "Inner Plane Layer 11"},
+            new FileDescription { type = "*.gp12",                   description = "Inner Plane Layer 12"},
+            new FileDescription { type = "*.gp13",                   description = "Inner Plane Layer 13"},
+            new FileDescription { type = "*.gp14",                   description = "Inner Plane Layer 14"},
+            new FileDescription { type = "*.gp15",                   description = "Inner Plane Layer 15"},
+            new FileDescription { type = "*.gp16",                   description = "Inner Plane Layer 16"},
+            new FileDescription { type = "*.gd1",                   description = "Drill Drawing (Layer Pair 1)"},
+            new FileDescription { type = "*.gd2",                   description = "Drill Drawing (Layer Pair 2)"},
+            new FileDescription { type = "*.gd3",                   description = "Drill Drawing (Layer Pair 3)"},
+            new FileDescription { type = "*.gd4",                   description = "Drill Drawing (Layer Pair 4)"},
+            new FileDescription { type = "*.gd5",                   description = "Drill Drawing (Layer Pair 5)"},
+            new FileDescription { type = "*.gd6",                   description = "Drill Drawing (Layer Pair 6)"},
+            new FileDescription { type = "*.gd7",                   description = "Drill Drawing (Layer Pair 7)"},
+            new FileDescription { type = "*.gd8",                   description = "Drill Drawing (Layer Pair 8)"},
+            new FileDescription { type = "*.gd9",                   description = "Drill Drawing (Layer Pair 9)"},
+            new FileDescription { type = "*.gd10",                   description = "Drill Drawing (Layer Pair 10)"},
+            new FileDescription { type = "*.gd11",                   description = "Drill Drawing (Layer Pair 11)"},
+            new FileDescription { type = "*.gd12",                   description = "Drill Drawing (Layer Pair 12)"},
+            new FileDescription { type = "*.gd13",                   description = "Drill Drawing (Layer Pair 13)"},
+            new FileDescription { type = "*.gd14",                   description = "Drill Drawing (Layer Pair 14)"},
+            new FileDescription { type = "*.gd15",                   description = "Drill Drawing (Layer Pair 15)"},
+            new FileDescription { type = "*.gd16",                   description = "Drill Drawing (Layer Pair 16)"},
+            new FileDescription { type = "*.tx1",                   description = "RS-274X Drill Data (Layer Pair 2)"},
+            new FileDescription { type = "*.tx2",                   description = "RS-274X Drill Data (Layer Pair 3)"},
+            new FileDescription { type = "*.tx3",                   description = "RS-274X Drill Data (Layer Pair 4)"},
+            new FileDescription { type = "*.tx4",                   description = "RS-274X Drill Data (Layer Pair 5)"},
+            new FileDescription { type = "*.tx5",                   description = "RS-274X Drill Data (Layer Pair 6)"},
+            new FileDescription { type = "*.tx6",                   description = "RS-274X Drill Data (Layer Pair 7)"},
+            new FileDescription { type = "*.tx7",                   description = "RS-274X Drill Data (Layer Pair 8)"},
+            new FileDescription { type = "*.tx8",                   description = "RS-274X Drill Data (Layer Pair 9)"},
+            new FileDescription { type = "*.tx9",                   description = "RS-274X Drill Data (Layer Pair 10)"},
+            new FileDescription { type = "*.tx10",                   description = "RS-274X Drill Data (Layer Pair 11)"},
+            new FileDescription { type = "*.tx11",                   description = "RS-274X Drill Data (Layer Pair 12)"},
+            new FileDescription { type = "*.tx12",                   description = "RS-274X Drill Data (Layer Pair 13)"},
+            new FileDescription { type = "*.tx13",                   description = "RS-274X Drill Data (Layer Pair 14)"},
+            new FileDescription { type = "*.tx14",                   description = "RS-274X Drill Data (Layer Pair 15)"},
+            new FileDescription { type = "*.tx15",                   description = "RS-274X Drill Data (Layer Pair 16)"},
+            new FileDescription { type = "*.tx16",                   description = "RS-274X Drill Data (Layer Pair 17)"},
             new FileDescription { type = "*.gto",                   description = "Top Silkscreen"},
             new FileDescription { type = "*.gbo",                   description = "Bottom Silkscreen"},
             new FileDescription { type = "*.gts",                   description = "Top Soldermask"},
@@ -232,36 +428,69 @@ namespace PCB_Documenter
             new FileDescription { type = "*.gtp",                   description = "Top Paste"},
             new FileDescription { type = "*.gbp",                   description = "Bottom Paste"},
             new FileDescription { type = "*.gko",                   description = "Board outline"},
-            new FileDescription { type = "NC Drill.TXT",            description = "RS-274X Drill Data"},
-            new FileDescription { type = "NC Drill-RoundHoles.TXT", description = "RS-274X Drill Data"},
+            new FileDescription { type = "NC Drill.TXT",            description = "RS-274X Drill Data (Through Holes)"},
+            new FileDescription { type = "NC Drill-RoundHoles.TXT", description = "RS-274X Drill Data (Through Holes)"},
             new FileDescription { type = "NC Drill-SlotHoles.TXT",  description = "RS-274X Slot Data"},
-            new FileDescription { type = "*.gd1",                   description = "Drill drawing"},
             new FileDescription { type = "*.ipc",                   description = "IPC-356 netlist"},
-            new FileDescription { type = "Pick and Place*.txt",     description = "Pick and Place file"},
+            new FileDescription { type = "Pick and Place*.txt",     description = "Pick and Place File"},
             new FileDescription { type = "*Artwork*.pdf",           description = "Artwork Drawing"},
             new FileDescription { type = "*.zip",                   description = "ODB++ Archive"},
         };
 
-        // Screen 2
-        private String dir = "";
-
-        private void PopulateListBoxes()
+        private FileDescription[] m_AssemblyFileDescription = new FileDescription[]
         {
-            // Don't repopulate if input directory hasn't changed
-            if (dir == txtInputDirectory.Text)
+            new FileDescription { type = "*PCB FAB.zip",            description = "PCB Fabrication Data"},
+            new FileDescription { type = "Schematic Prints.PDF",    description = "Schematic"},
+            new FileDescription { type = "Assembly Drawings.PDF",   description = "Assembly Drawing"},
+            new FileDescription { type = "Bill of Materials.XLS",   description = "Bill of Materials"},
+        };
+
+        private void ManageCheckGroupBox(CheckBox chk, GroupBox grp)
+        {
+            // Make sure the CheckBox isn't in the GroupBox.
+            // This will only happen the first time.
+            if (chk.Parent == grp)
             {
-                return;
+                // "Re-Parent" the CheckBox so it's not in the GroupBox.
+                grp.Parent.Controls.Add(chk);
+
+                // Adjust the CheckBox's location.
+                chk.Location = new Point(
+                    chk.Left + grp.Left,
+                    chk.Top + grp.Top);
+
+                // Move the CheckBox to the top of the stacking order.
+                chk.BringToFront();
             }
 
-            dir = txtInputDirectory.Text;
+            // Enable or disable the GroupBox.
+            grp.Enabled = chk.Checked;
+        }
+
+        // Screen 2
+        private void PopulateListBoxes(FileDescription[] fileDescription)
+        {
+            String directory = txtInputDirectory.Text;
 
             List<String> includedListFile = new List<String>();
 
-            // Populate the included file listview
-            foreach (FileDescription f in file)
+            listViewInclude.Items.Clear();
+
+            // Populate the included m_PcbFileDescription listview
+            foreach (FileDescription f in fileDescription)
             {
-                String[] files = System.IO.Directory.GetFiles(dir, f.type, SearchOption.AllDirectories).Where(fileName => !fileName.Contains("Deliverables")).Select(fileName => Path.GetFileName(fileName)).ToArray();
-                String[] dirs = System.IO.Directory.GetFiles(dir, f.type, SearchOption.AllDirectories).Where(fileName => !fileName.Contains("Deliverables")).Select(fileName => Path.GetDirectoryName(fileName)).ToArray();
+                String[] files;
+                String[] dirs;
+                if (f.type == "*PCB FAB.zip")
+                {
+                    files = System.IO.Directory.GetFiles(directory, f.type, SearchOption.AllDirectories).Select(fileName => Path.GetFileName(fileName)).ToArray();
+                    dirs = System.IO.Directory.GetFiles(directory, f.type, SearchOption.AllDirectories).Select(fileName => Path.GetDirectoryName(fileName)).ToArray();
+                }
+                else
+                {
+                    files = System.IO.Directory.GetFiles(directory, f.type, SearchOption.AllDirectories).Where(fileName => !fileName.Contains("Deliverables")).Select(fileName => Path.GetFileName(fileName)).ToArray();
+                    dirs = System.IO.Directory.GetFiles(directory, f.type, SearchOption.AllDirectories).Where(fileName => !fileName.Contains("Deliverables")).Select(fileName => Path.GetDirectoryName(fileName)).ToArray();
+                }
 
                 for (UInt16 i = 0; i < files.Length; i++)
                 {
@@ -274,12 +503,12 @@ namespace PCB_Documenter
                 }
             }
 
-            String[] xfiles = System.IO.Directory.GetFiles(dir, "*.*", SearchOption.AllDirectories).Select(fileName => Path.GetFileName(fileName)).ToArray();
-            String[] xdirs = System.IO.Directory.GetFiles(dir, "*.*", SearchOption.AllDirectories).Select(fileName => Path.GetDirectoryName(fileName)).ToArray();
+            String[] xfiles = System.IO.Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories).Select(fileName => Path.GetFileName(fileName)).ToArray();
+            String[] xdirs = System.IO.Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories).Select(fileName => Path.GetDirectoryName(fileName)).ToArray();
 
             for (UInt16 i = 0; i < xfiles.Length; i++)
             {
-                if (includedListFile.Contains(xfiles[i]) == false)
+                if (!includedListFile.Contains(xfiles[i]))
                 {
                     ListViewItem lvi = new ListViewItem(xfiles[i]);
                     lvi.SubItems.Add(xdirs[i]);
@@ -336,14 +565,13 @@ namespace PCB_Documenter
         }
 
         // Screen #3
-        private List<UpdatedFiles> datagridItems = new List<UpdatedFiles>();
-
-        private BindingSource bs;
+        private List<UpdatedFiles> m_DatagridItems = new List<UpdatedFiles>();
+        private BindingSource m_BindingSource;
 
         private void DataGridUpdate()
         {
-            bs = new BindingSource(datagridItems, string.Empty);
-            dataGridView1.DataSource = bs;
+            m_BindingSource = new BindingSource(m_DatagridItems, string.Empty);
+            dataGridView1.DataSource = m_BindingSource;
             // Hide the original directory and filename, no need to see that
             dataGridView1.Columns[2].Visible = false;
             dataGridView1.Columns[3].Visible = false;
@@ -351,40 +579,40 @@ namespace PCB_Documenter
 
         private void buttonMoveRowUp_Click(object sender, EventArgs e)
         {
-            int position = bs.Position;
+            int position = m_BindingSource.Position;
             if (position == 0) return;  // already at top
 
-            bs.RaiseListChangedEvents = false;
+            m_BindingSource.RaiseListChangedEvents = false;
 
-            UpdatedFiles current = (UpdatedFiles)bs.Current;
-            bs.Remove(current);
+            UpdatedFiles current = (UpdatedFiles)m_BindingSource.Current;
+            m_BindingSource.Remove(current);
 
             position--;
 
-            bs.Insert(position, current);
-            bs.Position = position;
+            m_BindingSource.Insert(position, current);
+            m_BindingSource.Position = position;
 
-            bs.RaiseListChangedEvents = true;
-            bs.ResetBindings(false);
+            m_BindingSource.RaiseListChangedEvents = true;
+            m_BindingSource.ResetBindings(false);
         }
 
         private void buttonMoveRowDown_Click(object sender, EventArgs e)
         {
-            int position = bs.Position;
-            if (position == bs.Count - 1) return;  // already at bottom
+            int position = m_BindingSource.Position;
+            if (position == m_BindingSource.Count - 1) return;  // already at bottom
 
-            bs.RaiseListChangedEvents = false;
+            m_BindingSource.RaiseListChangedEvents = false;
 
-            UpdatedFiles current = (UpdatedFiles)bs.Current;
-            bs.Remove(current);
+            UpdatedFiles current = (UpdatedFiles)m_BindingSource.Current;
+            m_BindingSource.Remove(current);
 
             position++;
 
-            bs.Insert(position, current);
-            bs.Position = position;
+            m_BindingSource.Insert(position, current);
+            m_BindingSource.Position = position;
 
-            bs.RaiseListChangedEvents = true;
-            bs.ResetBindings(false);
+            m_BindingSource.RaiseListChangedEvents = true;
+            m_BindingSource.ResetBindings(false);
         }
 
         public class UpdatedFiles
@@ -400,13 +628,13 @@ namespace PCB_Documenter
 
         private void buttonGenerate_Click(object sender, EventArgs e)
         {
-            CreatePCBFabDirectory();
-            CopyIncludedPCBFabFiles();
-            CreateReadMePCBFabFile();
-            ZipPCBFabFIles();
+            CreateDocGenDirectory();
+            CopyRequiredFiles();
+            CreateReadMeFile();
+            ZipFiles();
         }
 
-        private void ZipPCBFabFIles()
+        private void ZipFiles()
         {
             String[] sevenZipLocation = { @"C:\Program Files (x86)\7-Zip\7z.exe", @"C:\Program Files\7-Zip\7z.exe" };
 
@@ -415,10 +643,10 @@ namespace PCB_Documenter
                 try
                 {
                     System.Diagnostics.ProcessStartInfo psi = new System.Diagnostics.ProcessStartInfo(s);
-                    psi.WorkingDirectory = txtOutputDirectory.Text + "\\PCBFab";
-                    psi.Arguments = "a PCBFab.zip *.*";
+                    psi.WorkingDirectory = m_OutputDirectory + "\\DocGen";
+                    psi.Arguments = "a Files.zip *.*";
                     System.Diagnostics.Process p = System.Diagnostics.Process.Start(psi);
-                    // Wait for the file zip to complete before continuing
+                    // Wait for the m_PcbFileDescription zip to complete before continuing
                     p.WaitForExit();
                     break;
                 }
@@ -427,24 +655,29 @@ namespace PCB_Documenter
                 }
             }
 
-            String o = txtOutputDirectory.Text + "\\PCBFab\\PCBFab.zip";
-            String n = txtOutputDirectory.Text + "\\" + txtPCBPartNumber.Text.ToUpper() + "-" + txtRevision.Text.ToUpper() + " PCB FAB.zip";
+            String o = m_OutputDirectory + "\\DocGen\\Files.zip";
+            String n;
+            if (m_ActiveScreen == ActiveScreen.PCB_DOC_GEN)
+            {
+                n = m_OutputDirectory + "\\" + txtPCBPartNumber.Text.ToUpper() + "-" + txtPCBRevision.Text.ToUpper() + " PCB FAB.zip";
+            }
+            else
+            {
+                n = m_OutputDirectory + "\\" + txtAssemblyPartNumber.Text.ToUpper() + "-" + txtAssemblyRevision.Text.ToUpper() + " ASSY PKG.zip";
+            }
             System.IO.File.Copy(o, n, true);
 
-            o = txtOutputDirectory.Text + "\\PCBFab\\ReadMe.txt";
-            n = txtOutputDirectory.Text + "\\ReadMe.txt";
-            System.IO.File.Copy(o, n, true);
+            System.Diagnostics.Process np = System.Diagnostics.Process.Start("notepad.exe", m_OutputDirectory + "\\DocGen\\ReadMe.txt");
+            System.Threading.Thread.Sleep(500);
 
-            System.Diagnostics.Process np = System.Diagnostics.Process.Start("notepad.exe", txtOutputDirectory.Text + "\\ReadMe.txt");
-
-            String path = txtOutputDirectory.Text + "\\PCBFab";
+            String path = m_OutputDirectory + "\\DocGen";
             // Delete the directory.
             System.IO.Directory.Delete(path, true);
         }
 
-        private void CreatePCBFabDirectory()
+        private void CreateDocGenDirectory()
         {
-            String path = txtOutputDirectory.Text + "\\PCBFab";
+            String path = m_OutputDirectory + "\\DocGen";
             // Determine whether the directory exists.
             if (System.IO.Directory.Exists(path))
             {
@@ -455,7 +688,7 @@ namespace PCB_Documenter
             System.IO.Directory.CreateDirectory(path);
         }
 
-        private void CopyIncludedPCBFabFiles()
+        private void CopyRequiredFiles()
         {
             List<String> origFiles = new List<string>();
             List<String> newFiles = new List<string>();
@@ -465,33 +698,19 @@ namespace PCB_Documenter
             {
                 // Dir                                       //Filename
                 String o = dataGridView1.Rows[i].Cells[2].Value + "\\" + dataGridView1.Rows[i].Cells[3].Value;
-                String n = txtOutputDirectory.Text + "\\PCBFab\\" + dataGridView1.Rows[i].Cells[0].Value;
+                String n = m_OutputDirectory + "\\DocGen\\" + dataGridView1.Rows[i].Cells[0].Value;
 
-                if (n.Contains(".TXT") == true)
-                {
-                    if (n.StartsWith("NC Drill.") || n.StartsWith("NC Drill-RoundHoles."))
-                    {
-                        n = n.Replace(".TXT", ".NCD");
-                    }
-                    else if (n.StartsWith("NC Drill-SlottedHoles."))
-                    {
-                        n = n.Replace(".TXT", ".NCS");
-                    }
-                }
-
-                System.Diagnostics.Debug.Print(o);
-                System.Diagnostics.Debug.Print(n);
                 System.IO.File.Copy(o, n, true);
 
                 i++;
             }
         }
 
-        private void CreateReadMePCBFabFile()
+        private void CreateReadMeFile()
         {
-            using (StreamWriter file = File.CreateText(txtOutputDirectory.Text + "\\PCBFab\\Readme.txt"))
+            using (StreamWriter file = File.CreateText(m_OutputDirectory + "\\DocGen\\Readme.txt"))
             {
-                file.WriteLine("CONTACT: " + cBoxName.Text);
+                file.WriteLine("CONTACT: " + dropBoxName.Text);
                 file.WriteLine("COMPANY: SIGENIX, INC.");
                 file.WriteLine("         100 SANDUNE DRIVE");
                 file.WriteLine("         PITTSBURGH, PA 15239");
@@ -501,10 +720,23 @@ namespace PCB_Documenter
                 file.WriteLine("FAX:     (412) 380-7573");
                 file.WriteLine("EMAIL:   " + txtEmail.Text);
                 file.WriteLine("");
-                file.WriteLine("TITLE:   " + txtPCBTitle.Text);
-                file.WriteLine("P.N.:    " + txtPCBPartNumber.Text);
-                file.WriteLine("REV:     " + txtRevision.Text);
-                file.WriteLine("DATE:    " + DateTime.Today.ToString("MM/dd/yyyy"));
+                if (m_ActiveScreen == ActiveScreen.PCB_DOC_GEN)
+                {
+                    file.WriteLine("TITLE:   " + txtPCBTitle.Text);
+                    file.WriteLine("P.N.:    " + txtPCBPartNumber.Text);
+                    file.WriteLine("REV:     " + txtPCBRevision.Text);
+                }
+                else
+                {
+                    file.WriteLine("TITLE:   " + txtAssemblyTitle.Text);
+                    file.WriteLine("P.N.:    " + txtAssemblyPartNumber.Text);
+                    file.WriteLine("REV:     " + txtAssemblyRevision.Text);
+                }
+
+                DateTime dateTime = DateTime.Now;
+
+                file.WriteLine("DATE:    " + dateTime.ToString("MMM-dd-yyyy"));
+                file.WriteLine("TIME:    " + dateTime.ToString("HH:mm:ss"));
                 file.WriteLine("----------------------------------------------------------");
                 file.WriteLine("");
                 file.WriteLine("REFER TO ARTWORK DRAWING FOR MATERIAL SPECIFICATIONS AND LAYER STACKUP");
@@ -514,7 +746,14 @@ namespace PCB_Documenter
                 file.WriteLine("");
                 file.WriteLine("----------------------------------------------------------");
                 file.WriteLine("");
-                file.WriteLine("FABRCATION DATA INCLUDED IN ZIP FILE:");
+                if (m_ActiveScreen == ActiveScreen.PCB_DOC_GEN)
+                {
+                    file.WriteLine("FABRCATION DATA INCLUDED IN ZIP FILE:");
+                }
+                else
+                {
+                    file.WriteLine("ASSEMBLY DATA INCLUDED IN ZIP FILE:");
+                }
                 file.WriteLine("");
                 file.WriteLine("FILE                            DESCRIPTION");
                 file.WriteLine("==================              ==============================");
@@ -524,10 +763,6 @@ namespace PCB_Documenter
                 foreach (ListViewItem l in listViewInclude.Items)
                 {
                     String n = dataGridView1.Rows[i].Cells[0].Value.ToString().PadRight(32) + dataGridView1.Rows[i].Cells[1].Value.ToString();
-                    if (n.Contains(".TXT") == true)
-                    {
-                        n = n.Replace(".TXT", ".PNP");
-                    }
                     file.WriteLine(n);
                     i++;
                 }
@@ -551,7 +786,7 @@ namespace PCB_Documenter
 
         private void saveFileDialog1_FileOk(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            // Get file name.
+            // Get m_PcbFileDescription name.
             string name = saveFileDialog1.FileName;
 
             PCBSettings pcb = new PCBSettings();
@@ -575,7 +810,7 @@ namespace PCB_Documenter
                 }
                 catch (IOException)
                 {
-                    MessageBox.Show("Invalid PCB Documenter file");
+                    MessageBox.Show("Invalid PCB Documenter m_PcbFileDescription");
                 }
             }
         }
@@ -587,11 +822,16 @@ namespace PCB_Documenter
             aPCB.dimY = txtY.Text;
             aPCB.inputFolder = txtInputDirectory.Text;
             aPCB.layerCount = cBoxLayers.Text;
-            aPCB.name = cBoxName.Text;
-            aPCB.outputFolder = txtOutputDirectory.Text;
+            aPCB.name = dropBoxName.Text;
+            aPCB.outputFolder = m_OutputDirectory;
+            aPCB.pcbEnabled = cBoxPCB.Checked.ToString(); ;
             aPCB.pcbPartNumber = txtPCBPartNumber.Text;
-            aPCB.pcbRevision = txtRevision.Text;
+            aPCB.pcbRevision = txtPCBRevision.Text;
             aPCB.pcbTitle = txtPCBTitle.Text;
+            aPCB.assemblyEnabled = cBoxAssembly.Checked.ToString();
+            aPCB.assemblyPartNumber = txtAssemblyPartNumber.Text;
+            aPCB.assemblyRevision = txtAssemblyRevision.Text;
+            aPCB.assemblyTitle = txtAssemblyTitle.Text;
             aPCB.phoneCell = txtPhoneCell.Text;
             aPCB.phoneOffice = txtPhoneOffice.Text;
         }
@@ -603,19 +843,50 @@ namespace PCB_Documenter
             txtY.Text = aPCB.dimY;
             txtInputDirectory.Text = aPCB.inputFolder;
             cBoxLayers.Text = aPCB.layerCount;
-            cBoxName.Text = aPCB.name;
-            txtOutputDirectory.Text = aPCB.outputFolder;
+            dropBoxName.Text = aPCB.name;
+            m_OutputDirectory = aPCB.outputFolder;
             txtPCBPartNumber.Text = aPCB.pcbPartNumber;
-            txtRevision.Text = aPCB.pcbRevision;
+            txtPCBRevision.Text = aPCB.pcbRevision;
             txtPCBTitle.Text = aPCB.pcbTitle;
+            txtAssemblyPartNumber.Text = aPCB.assemblyPartNumber;
+            txtAssemblyRevision.Text = aPCB.assemblyRevision;
+            txtAssemblyTitle.Text = aPCB.assemblyTitle;
             txtPhoneCell.Text = aPCB.phoneCell;
             txtPhoneOffice.Text = aPCB.phoneOffice;
+
+            if (aPCB.pcbEnabled == "True")
+            {
+                cBoxPCB.Checked = true;
+            }
+            else
+            {
+                cBoxPCB.Checked = false;
+            }
+
+            if (aPCB.assemblyEnabled == "True")
+            {
+                cBoxAssembly.Checked = true;
+            }
+            else
+            {
+                cBoxAssembly.Checked = false;
+            }
         }
 
         private void aboutToolStripMenuItem1_Click(object sender, EventArgs e)
         {
             AboutBox about = new AboutBox();
             about.ShowDialog();
+        }
+
+        private void cBoxPCB_CheckedChanged(object sender, EventArgs e)
+        {
+            ManageCheckGroupBox(cBoxPCB, groupBox4);
+        }
+
+        private void cBoxAssembly_CheckedChanged(object sender, EventArgs e)
+        {
+            ManageCheckGroupBox(cBoxAssembly, groupBox5);
         }
     }
 }
