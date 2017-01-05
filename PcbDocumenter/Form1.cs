@@ -47,10 +47,12 @@ namespace PCB_Documenter
 
         private void PopulateNameDropBox()
         {
+            // Add all contacts to the drop box
             foreach (ContactInfo c in m_ContactInfo)
             {
                 dropBoxName.Items.Add(c.name);
             }
+            // Force a selected index changed event which forces other text boxes to be filled
             dropBoxName.SelectedIndex = 0;
         }
 
@@ -66,12 +68,18 @@ namespace PCB_Documenter
 
         private void buttonNext_Click(object sender, EventArgs e)
         {
+            // If were on a Doc Generation screen, check if the Generate Doc button was clicked
             if (CheckDocGeneration())
             {
                 SetNextScreen();
             }
         }
 
+        /// <summary>
+        /// Determines whether or not the Gen DOc button was pressed (if were on that screen). Warns the user
+        /// if not. 
+        /// </summary>
+        /// <returns>true if its OK to navigate away from current screen; false otherwise</returns>
         private Boolean CheckDocGeneration()
         {
             DialogResult diagResult;
@@ -105,6 +113,9 @@ namespace PCB_Documenter
             return true;
         }
 
+        /// <summary>
+        /// Moves to the next screen
+        /// </summary>
         private void SetNextScreen()
         {
             // Handle the home screen
@@ -116,9 +127,15 @@ namespace PCB_Documenter
                     return;
                 }
 
+                // Reset the active screen index... needed in case the user decided to change
+                // what screens are available
                 m_ActiveScreenIndex = 0;
+
+                // the only case thats not handled here is when both checkboxes are deselected. in which 
+                // case the ValidateInfo() function will fail
                 if (cBoxPCB.Checked)
                 {
+                    // case where only PCB is selected
                     m_ValidScreens = new ActiveScreen[]
                                     { ActiveScreen.HOME,
                                       ActiveScreen.PCB_FILE_SELECTION,
@@ -129,6 +146,7 @@ namespace PCB_Documenter
                 {
                     if (cBoxPCB.Checked)
                     {
+                        // case where both pcb and assembly are selected
                         m_ValidScreens = new ActiveScreen[]
                                     { ActiveScreen.HOME,
                                       ActiveScreen.PCB_FILE_SELECTION,
@@ -138,6 +156,7 @@ namespace PCB_Documenter
                     }
                     else
                     {
+                        // case where only assembly is selected
                         m_ValidScreens = new ActiveScreen[]
                                     { ActiveScreen.HOME,
                                       ActiveScreen.ASSEMBLY_FILE_SELECTION,
@@ -146,14 +165,16 @@ namespace PCB_Documenter
                 }
             }
 
-            // Enable the "Back" button since we may be moving forward
+            // Always enable the "Back" button since we will be moving forward unless we're on the last screen
             buttonBack.Enabled = true;
             m_ActiveScreenIndex++;
             if (m_ActiveScreenIndex >= m_ValidScreens.Length - 1)
             {
+                // disable he next button since we're moving to the last screen
                 buttonNext.Enabled = false;
             }
 
+            // Get the new screen name
             m_ActiveScreen = m_ValidScreens[m_ActiveScreenIndex];
 
             if ((m_ActiveScreen == ActiveScreen.PCB_DOC_GEN) ||
@@ -164,17 +185,24 @@ namespace PCB_Documenter
                 DataGridUpdate();
             }
 
+            // Change the screen
             SetActiveScreen();
         }
 
+        /// <summary>
+        /// Validates all information is entered on the Home Screen
+        /// </summary>
+        /// <returns>true if all info validated; false otherwise</returns>
         private Boolean ValidateInfo()
         {
+            // Verify at least one package is checked
             if (!cBoxPCB.Checked && !cBoxAssembly.Checked)
             {
                 MessageBox.Show("At least 1 package (PCB/Assembly) must be selected");
                 return false;
             }
 
+            // Verify all PCB info is there
             if (cBoxPCB.Checked)
             {
                 if ((txtPCBTitle.Text == "") || (txtPCBRevision.Text == "") || (txtPCBPartNumber.Text == ""))
@@ -184,6 +212,7 @@ namespace PCB_Documenter
                 }
             }
 
+            // Verify all Assembly info is there
             if (cBoxAssembly.Checked)
             {
                 if ((txtAssemblyTitle.Text == "") || (txtAssemblyRevision.Text == "") || (txtAssemblyPartNumber.Text == ""))
@@ -198,7 +227,7 @@ namespace PCB_Documenter
                  (cBoxPCBThickness.Text == "") || (cBoxLayers.Text == "") || (cBoxPCBThickness.Text == "") ||
                  (txtInputDirectory.Text == ""))
             {
-                MessageBox.Show("Please fill all info");
+                MessageBox.Show("At least one field is not complete. Please fill all information so that a correct \"Readme.txt\" can be generated");
                 return false;
             }
 
@@ -212,6 +241,9 @@ namespace PCB_Documenter
             return true;
         }
 
+        /// <summary>
+        /// Updates the data grid on the Doc generation screen
+        /// </summary>
         private void UpdateDataGridItems()
         {
             m_DatagridItems.Clear();
@@ -231,6 +263,7 @@ namespace PCB_Documenter
                 }
                 else
                 {
+                    // Special renaming is required for Assembly package docs 
                     String appendPrefix = "";
                     String prefix = prefixExtension[0].ToUpper();
                     String ext = prefixExtension[1].ToUpper();
@@ -547,8 +580,11 @@ namespace PCB_Documenter
                 String extension = filterUpperCase.Substring(dotIndex + 1);
                 for (UInt16 i = 0; i < files.Length; i++)
                 {
+                    // required because windows search engine returns multiple files. For example
+                    // *.gd1 returns *.gd1, *.gd10, *.gd11, *.gd1asdf, etc.
                     Char[] splitIt = { '.' };
                     String[] prefixExtension = files[i].ToUpper().Split(splitIt);
+                    // verify the extension is identical
                     if (prefixExtension[1] == extension)
                     {
                         fileList.Add(files[i]);
@@ -566,11 +602,13 @@ namespace PCB_Documenter
                 }
             }
 
+            // Get all of the files in all of the subdirectories
             String[] xfiles = System.IO.Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories).Select(fileName => Path.GetFileName(fileName)).ToArray();
             String[] xdirs = System.IO.Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories).Select(fileName => Path.GetDirectoryName(fileName)).ToArray();
 
             for (UInt16 i = 0; i < xfiles.Length; i++)
             {
+                // If the file isn't in the included list, add it to the excluded list
                 if (!includedListFile.Contains(xfiles[i]))
                 {
                     ListViewItem lvi = new ListViewItem(xfiles[i]);
@@ -697,6 +735,7 @@ namespace PCB_Documenter
 
         private void buttonGenerate_Click(object sender, EventArgs e)
         {
+            // Set the appropriate flag to true based on the type of doc being generated
             if (m_ActiveScreen == ActiveScreen.PCB_DOC_GEN)
             {
                 m_PcbDocGen = true;
@@ -711,8 +750,12 @@ namespace PCB_Documenter
             ZipFiles();
         }
 
+        /// <summary>
+        /// Zips all files in docgen directory and displays readme.txt
+        /// </summary>
         private void ZipFiles()
         {
+            // Normal locations for 7 zip to be installed
             String[] sevenZipLocation = { @"C:\Program Files (x86)\7-Zip\7z.exe", @"C:\Program Files\7-Zip\7z.exe" };
 
             foreach (String s in sevenZipLocation)
@@ -723,7 +766,7 @@ namespace PCB_Documenter
                     psi.WorkingDirectory = m_OutputDirectory + "\\DocGen";
                     psi.Arguments = "a Files.zip *.*";
                     System.Diagnostics.Process p = System.Diagnostics.Process.Start(psi);
-                    // Wait for the m_PcbFileDescription zip to complete before continuing
+                    // Wait for the zip execution to complete before continuing
                     p.WaitForExit();
                     break;
                 }
@@ -734,6 +777,8 @@ namespace PCB_Documenter
 
             String o = m_OutputDirectory + "\\DocGen\\Files.zip";
             String n;
+
+            // Rename zip file based on doc being generated
             if (m_ActiveScreen == ActiveScreen.PCB_DOC_GEN)
             {
                 n = m_OutputDirectory + "\\" + txtPCBPartNumber.Text.ToUpper() + "-" + txtPCBRevision.Text.ToUpper() + " PCB FAB.zip";
@@ -745,6 +790,8 @@ namespace PCB_Documenter
             System.IO.File.Copy(o, n, true);
 
             System.Diagnostics.Process np = System.Diagnostics.Process.Start("notepad.exe", m_OutputDirectory + "\\DocGen\\ReadMe.txt");
+            
+            // Sleep needed so that directory isn't deleted prior to notepad having a chance to open readme.txt
             System.Threading.Thread.Sleep(500);
 
             String path = m_OutputDirectory + "\\DocGen";
@@ -765,24 +812,28 @@ namespace PCB_Documenter
             System.IO.Directory.CreateDirectory(path);
         }
 
+        /// <summary>
+        /// Copies all of the files in the include list to the temp directory in preparation for zipping
+        /// </summary>
         private void CopyRequiredFiles()
         {
-            List<String> origFiles = new List<string>();
-            List<String> newFiles = new List<string>();
             UInt16 i = 0;
 
             foreach (ListViewItem l in listViewInclude.Items)
             {
-                // Dir                                       //Filename
-                String o = dataGridView1.Rows[i].Cells[2].Value + "\\" + dataGridView1.Rows[i].Cells[3].Value;
-                String n = m_OutputDirectory + "\\DocGen\\" + dataGridView1.Rows[i].Cells[0].Value;
+                           // Directory                                   Filename
+                String origFile = dataGridView1.Rows[i].Cells[2].Value + "\\" + dataGridView1.Rows[i].Cells[3].Value;
+                String newFile = m_OutputDirectory + "\\DocGen\\" + dataGridView1.Rows[i].Cells[0].Value;
 
-                System.IO.File.Copy(o, n, true);
+                System.IO.File.Copy(origFile, newFile, true);
 
                 i++;
             }
         }
 
+        /// <summary>
+        /// Creates the readme.txt file
+        /// </summary>
         private void CreateReadMeFile()
         {
             using (StreamWriter file = File.CreateText(m_OutputDirectory + "\\DocGen\\Readme.txt"))
@@ -873,8 +924,10 @@ namespace PCB_Documenter
             XMLInterface.SerializeToXML(pcb, name);
         }
 
+
         private void openToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            // Get the XML settings file
             DialogResult result = openFileDialog1.ShowDialog();
 
             if (result == DialogResult.OK) // Test result.
@@ -887,11 +940,15 @@ namespace PCB_Documenter
                 }
                 catch (IOException)
                 {
-                    MessageBox.Show("Invalid PCB Documenter m_PcbFileDescription");
+                    MessageBox.Show("Invalid PCB Documenter file");
                 }
             }
         }
 
+        /// <summary>
+        /// Saves form control settings in preparation to saving to an XML file
+        /// </summary>
+        /// <param name="aPCB">object where form control settings are stored</param>
         private void SaveParams(PCBSettings aPCB)
         {
             aPCB.PCBThickness = cBoxPCBThickness.Text;
@@ -913,6 +970,10 @@ namespace PCB_Documenter
             aPCB.phoneOffice = txtPhoneOffice.Text;
         }
 
+        /// <summary>
+        /// Updates all the controls from data from an XML file
+        /// </summary>
+        /// <param name="aPCB">XML file data</param>
         private void OpenParams(PCBSettings aPCB)
         {
             cBoxPCBThickness.Text = aPCB.PCBThickness;

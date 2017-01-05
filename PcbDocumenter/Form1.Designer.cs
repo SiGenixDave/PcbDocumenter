@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             this.dropBoxName = new System.Windows.Forms.ComboBox();
             this.label1 = new System.Windows.Forms.Label();
             this.txtPhoneOffice = new System.Windows.Forms.TextBox();
@@ -313,7 +314,7 @@
             this.buttonSelectInputFolder.Name = "buttonSelectInputFolder";
             this.buttonSelectInputFolder.Size = new System.Drawing.Size(90, 39);
             this.buttonSelectInputFolder.TabIndex = 34;
-            this.buttonSelectInputFolder.Text = "Select Input Folder";
+            this.buttonSelectInputFolder.Text = "Select Design Input Folder";
             this.buttonSelectInputFolder.UseVisualStyleBackColor = true;
             this.buttonSelectInputFolder.Click += new System.EventHandler(this.buttonSelectInputFolder_Click);
             // 
@@ -675,21 +676,21 @@
             // openToolStripMenuItem
             // 
             this.openToolStripMenuItem.Name = "openToolStripMenuItem";
-            this.openToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.openToolStripMenuItem.Size = new System.Drawing.Size(112, 22);
             this.openToolStripMenuItem.Text = "Open...";
             this.openToolStripMenuItem.Click += new System.EventHandler(this.openToolStripMenuItem_Click);
             // 
             // saveToolStripMenuItem
             // 
             this.saveToolStripMenuItem.Name = "saveToolStripMenuItem";
-            this.saveToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.saveToolStripMenuItem.Size = new System.Drawing.Size(112, 22);
             this.saveToolStripMenuItem.Text = "Save...";
             this.saveToolStripMenuItem.Click += new System.EventHandler(this.saveToolStripMenuItem_Click);
             // 
             // exiitToolStripMenuItem
             // 
             this.exiitToolStripMenuItem.Name = "exiitToolStripMenuItem";
-            this.exiitToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.exiitToolStripMenuItem.Size = new System.Drawing.Size(112, 22);
             this.exiitToolStripMenuItem.Text = "Exit";
             this.exiitToolStripMenuItem.Click += new System.EventHandler(this.exiitToolStripMenuItem_Click);
             // 
@@ -727,9 +728,10 @@
             this.Controls.Add(this.buttonNext);
             this.Controls.Add(this.buttonBack);
             this.Controls.Add(this.menuStrip1);
-            this.Controls.Add(this.groupBox3);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
+            this.Controls.Add(this.groupBox3);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "Form1";
             this.Text = "PCB Document Creator";

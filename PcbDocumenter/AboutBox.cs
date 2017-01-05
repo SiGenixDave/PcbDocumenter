@@ -1,6 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Drawing;
+using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
+using System.IO;
 
 namespace PCB_Documenter
 {
@@ -9,11 +14,14 @@ namespace PCB_Documenter
         public AboutBox()
         {
             InitializeComponent();
-            this.Text = String.Format("About {0} {0}", AssemblyTitle);
+            this.Text = String.Format("About {0}", AssemblyTitle);
             this.labelProductName.Text = AssemblyProduct;
-            this.labelVersion.Text = String.Format("Version {0} ", AssemblyVersion);
+            this.labelVersion.Text = String.Format("Version {0}", AssemblyVersion);
             this.labelCopyright.Text = AssemblyCopyright;
-            this.textBoxDescription.Text = AssemblyDescription;
+            this.labelCompanyName.Text = AssemblyCompany;
+            DateTime buildDate = new FileInfo(Assembly.GetExecutingAssembly().Location).LastWriteTime;
+            this.textBoxDescription.Text = "Build Date: " + buildDate.ToString("MMM-dd-yyyy") + System.Environment.NewLine +
+                                           "Build Time: " + buildDate.ToString("t");
         }
 
         #region Assembly Attribute Accessors
@@ -94,7 +102,6 @@ namespace PCB_Documenter
                 return ((AssemblyCompanyAttribute)attributes[0]).Company;
             }
         }
-
-        #endregion Assembly Attribute Accessors
+        #endregion
     }
 }
