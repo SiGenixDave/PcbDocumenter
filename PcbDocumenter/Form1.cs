@@ -481,7 +481,7 @@ namespace PCB_Documenter
             new FileDescription { type = "*.ipc",                   description = "IPC-356 netlist"},
             new FileDescription { type = "Pick and Place*.txt",     description = "Pick and Place File"},
             new FileDescription { type = "*Artwork*.pdf",           description = "Artwork Drawing"},
-            new FileDescription { type = "*.zip",                   description = "ODB++ Archive"},
+            new FileDescription { type = "ODB*.zip",                description = "ODB++ Archive"},
         };
 
         private FileDescription[] m_AssemblyFileDescription = new FileDescription[]
@@ -522,6 +522,7 @@ namespace PCB_Documenter
             List<String> includedListFile = new List<String>();
 
             listViewInclude.Items.Clear();
+            listViewExclude.Items.Clear();
 
             // Populate the included m_PcbFileDescription listview
             foreach (FileDescription f in fileDescription)
@@ -628,7 +629,6 @@ namespace PCB_Documenter
 
         // Screen #3
         private List<UpdatedFiles> m_DatagridItems = new List<UpdatedFiles>();
-
         private BindingSource m_BindingSource;
 
         private void DataGridUpdate()
@@ -643,7 +643,10 @@ namespace PCB_Documenter
         private void buttonMoveRowUp_Click(object sender, EventArgs e)
         {
             int position = m_BindingSource.Position;
-            if (position == 0) return;  // already at top
+            if (position == 0)
+            {
+                return;  // already at top
+            }
 
             m_BindingSource.RaiseListChangedEvents = false;
 
@@ -662,7 +665,10 @@ namespace PCB_Documenter
         private void buttonMoveRowDown_Click(object sender, EventArgs e)
         {
             int position = m_BindingSource.Position;
-            if (position == m_BindingSource.Count - 1) return;  // already at bottom
+            if (position == m_BindingSource.Count - 1)
+            {
+                return;  // already at bottom
+            }
 
             m_BindingSource.RaiseListChangedEvents = false;
 
@@ -950,19 +956,39 @@ namespace PCB_Documenter
             about.ShowDialog();
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void cBoxPCB_CheckedChanged(object sender, EventArgs e)
         {
             ManageCheckGroupBox(cBoxPCB, groupBox4);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void cBoxAssembly_CheckedChanged(object sender, EventArgs e)
         {
             ManageCheckGroupBox(cBoxAssembly, groupBox5);
         }
 
+        /// <summary>
+        /// Required in case the user edits the textbox instead of using the Folder Browser
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void txtInputDirectory_TextChanged(object sender, EventArgs e)
         {
             m_OutputDirectory = txtInputDirectory.Text + @"\Deliverables";
+        }
+
+        private void exiitToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Application.Exit();
         }
     }
 }
