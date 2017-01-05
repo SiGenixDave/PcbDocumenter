@@ -9,7 +9,7 @@ namespace PCB_Documenter
 {
     public partial class Form1 : Form
     {
-        enum ActiveScreen
+        private enum ActiveScreen
         {
             HOME,
             PCB_FILE_SELECTION,
@@ -18,14 +18,15 @@ namespace PCB_Documenter
             ASSEMBLY_DOC_GEN,
         }
 
-
         // Screens are actually visible group boxes
         private ActiveScreen m_ActiveScreen = ActiveScreen.HOME;
+
         private ActiveScreen[] m_ValidScreens;
         private UInt16 m_ActiveScreenIndex;
         private String m_OutputDirectory;
-        
-        
+        private Boolean m_PcbDocGen = false;
+        private Boolean m_AssemblyDocGen = false;
+
         public Form1()
         {
             InitializeComponent();
@@ -63,10 +64,45 @@ namespace PCB_Documenter
             }
         }
 
-
         private void buttonNext_Click(object sender, EventArgs e)
         {
-            SetNextScreen();
+            if (CheckDocGeneration())
+            {
+                SetNextScreen();
+            }
+        }
+
+        private Boolean CheckDocGeneration()
+        {
+            DialogResult diagResult;
+            if ((!m_PcbDocGen) && (m_ActiveScreen == ActiveScreen.PCB_DOC_GEN))
+            {
+                diagResult = MessageBox.Show("You are attempting to leave the PCB Document Generator Screen without having generated the PCB package. Do you still wish to leave this screen?",
+                    "Doc Gen Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                if (diagResult == System.Windows.Forms.DialogResult.No)
+                {
+                    return false;
+                }
+                else
+                {
+                    return true;
+                }
+            }
+            if ((!m_AssemblyDocGen) && (m_ActiveScreen == ActiveScreen.ASSEMBLY_DOC_GEN))
+            {
+                diagResult = MessageBox.Show("You are attempting to leave the Assembly Document Generator Screen without having generated the Assembly package. Do you still wish to leave this screen?",
+                    "Doc Gen Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                if (diagResult == System.Windows.Forms.DialogResult.No)
+                {
+                    return false;
+                }
+                else
+                {
+                    return true;
+                }
+            }
+
+            return true;
         }
 
         private void SetNextScreen()
@@ -83,9 +119,9 @@ namespace PCB_Documenter
                 m_ActiveScreenIndex = 0;
                 if (cBoxPCB.Checked)
                 {
-                    m_ValidScreens = new ActiveScreen[] 
-                                    { ActiveScreen.HOME, 
-                                      ActiveScreen.PCB_FILE_SELECTION, 
+                    m_ValidScreens = new ActiveScreen[]
+                                    { ActiveScreen.HOME,
+                                      ActiveScreen.PCB_FILE_SELECTION,
                                       ActiveScreen.PCB_DOC_GEN };
                 }
 
@@ -93,17 +129,17 @@ namespace PCB_Documenter
                 {
                     if (cBoxPCB.Checked)
                     {
-                        m_ValidScreens = new ActiveScreen[] 
-                                    { ActiveScreen.HOME, 
-                                      ActiveScreen.PCB_FILE_SELECTION, 
+                        m_ValidScreens = new ActiveScreen[]
+                                    { ActiveScreen.HOME,
+                                      ActiveScreen.PCB_FILE_SELECTION,
                                       ActiveScreen.PCB_DOC_GEN,
                                       ActiveScreen.ASSEMBLY_FILE_SELECTION,
                                       ActiveScreen.ASSEMBLY_DOC_GEN };
                     }
                     else
                     {
-                        m_ValidScreens = new ActiveScreen[] 
-                                    { ActiveScreen.HOME, 
+                        m_ValidScreens = new ActiveScreen[]
+                                    { ActiveScreen.HOME,
                                       ActiveScreen.ASSEMBLY_FILE_SELECTION,
                                       ActiveScreen.ASSEMBLY_DOC_GEN };
                     }
@@ -165,6 +201,14 @@ namespace PCB_Documenter
                 MessageBox.Show("Please fill all info");
                 return false;
             }
+
+            // Verify directory is valid (User might hand edit the text box instead of navigate to the directory)
+            if (!System.IO.Directory.Exists(txtInputDirectory.Text))
+            {
+                MessageBox.Show("Design Input Directory does not exist. Please select a valid input directory");
+                return false;
+            }
+
             return true;
         }
 
@@ -241,11 +285,14 @@ namespace PCB_Documenter
                     return;
                 }
             }
-
         }
 
         private void buttonBack_Click(object sender, EventArgs e)
         {
+            if (!CheckDocGeneration())
+            {
+                return;
+            }
             buttonNext.Enabled = true;
             m_ActiveScreenIndex--;
             if (m_ActiveScreenIndex == 0)
@@ -284,7 +331,7 @@ namespace PCB_Documenter
                     break;
 
                 case ActiveScreen.PCB_DOC_GEN:
-                case ActiveScreen.ASSEMBLY_DOC_GEN: 
+                case ActiveScreen.ASSEMBLY_DOC_GEN:
                     groupBox1.Visible = false;
                     groupBox2.Visible = false;
                     groupBox3.Visible = true;
@@ -389,7 +436,7 @@ namespace PCB_Documenter
             new FileDescription { type = "*.gp14",                   description = "Inner Plane Layer 14"},
             new FileDescription { type = "*.gp15",                   description = "Inner Plane Layer 15"},
             new FileDescription { type = "*.gp16",                   description = "Inner Plane Layer 16"},
-            new FileDescription { type = "*.gd1",                   description = "Drill Drawing (Layer Pair 1)"},
+            new FileDescription { type = "*.gd1",                   description = "Drill Drawing (Through Holes)"},
             new FileDescription { type = "*.gd2",                   description = "Drill Drawing (Layer Pair 2)"},
             new FileDescription { type = "*.gd3",                   description = "Drill Drawing (Layer Pair 3)"},
             new FileDescription { type = "*.gd4",                   description = "Drill Drawing (Layer Pair 4)"},
@@ -479,8 +526,10 @@ namespace PCB_Documenter
             // Populate the included m_PcbFileDescription listview
             foreach (FileDescription f in fileDescription)
             {
+                List<String> fileList = new List<string>();
                 String[] files;
                 String[] dirs;
+
                 if (f.type == "*PCB FAB.zip")
                 {
                     files = System.IO.Directory.GetFiles(directory, f.type, SearchOption.AllDirectories).Select(fileName => Path.GetFileName(fileName)).ToArray();
@@ -492,9 +541,22 @@ namespace PCB_Documenter
                     dirs = System.IO.Directory.GetFiles(directory, f.type, SearchOption.AllDirectories).Where(fileName => !fileName.Contains("Deliverables")).Select(fileName => Path.GetDirectoryName(fileName)).ToArray();
                 }
 
+                String filterUpperCase = f.type.ToUpper();
+                Int32 dotIndex = filterUpperCase.LastIndexOf(".");
+                String extension = filterUpperCase.Substring(dotIndex + 1);
                 for (UInt16 i = 0; i < files.Length; i++)
                 {
-                    ListViewItem lvi = new ListViewItem(files[i]);
+                    Char[] splitIt = { '.' };
+                    String[] prefixExtension = files[i].ToUpper().Split(splitIt);
+                    if (prefixExtension[1] == extension)
+                    {
+                        fileList.Add(files[i]);
+                    }
+                }
+
+                for (UInt16 i = 0; i < fileList.Count; i++)
+                {
+                    ListViewItem lvi = new ListViewItem(fileList[i]);
                     lvi.SubItems.Add(dirs[i]);
                     lvi.SubItems.Add(f.description);
                     listViewInclude.Items.Add(lvi);
@@ -566,6 +628,7 @@ namespace PCB_Documenter
 
         // Screen #3
         private List<UpdatedFiles> m_DatagridItems = new List<UpdatedFiles>();
+
         private BindingSource m_BindingSource;
 
         private void DataGridUpdate()
@@ -628,6 +691,14 @@ namespace PCB_Documenter
 
         private void buttonGenerate_Click(object sender, EventArgs e)
         {
+            if (m_ActiveScreen == ActiveScreen.PCB_DOC_GEN)
+            {
+                m_PcbDocGen = true;
+            }
+            else if (m_ActiveScreen == ActiveScreen.ASSEMBLY_DOC_GEN)
+            {
+                m_AssemblyDocGen = true;
+            }
             CreateDocGenDirectory();
             CopyRequiredFiles();
             CreateReadMeFile();
@@ -887,6 +958,11 @@ namespace PCB_Documenter
         private void cBoxAssembly_CheckedChanged(object sender, EventArgs e)
         {
             ManageCheckGroupBox(cBoxAssembly, groupBox5);
+        }
+
+        private void txtInputDirectory_TextChanged(object sender, EventArgs e)
+        {
+            m_OutputDirectory = txtInputDirectory.Text + @"\Deliverables";
         }
     }
 }

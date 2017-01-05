@@ -280,7 +280,6 @@
             // 
             // cBoxPCBThickness
             // 
-            this.cBoxPCBThickness.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cBoxPCBThickness.FormattingEnabled = true;
             this.cBoxPCBThickness.Items.AddRange(new object[] {
             "0.031\"",
@@ -324,6 +323,7 @@
             this.txtInputDirectory.Name = "txtInputDirectory";
             this.txtInputDirectory.Size = new System.Drawing.Size(324, 20);
             this.txtInputDirectory.TabIndex = 35;
+            this.txtInputDirectory.TextChanged += new System.EventHandler(this.txtInputDirectory_TextChanged);
             // 
             // groupBox1
             // 
@@ -726,9 +726,9 @@
             this.Controls.Add(this.buttonNext);
             this.Controls.Add(this.buttonBack);
             this.Controls.Add(this.menuStrip1);
-            this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.groupBox3);
             this.Controls.Add(this.groupBox2);
+            this.Controls.Add(this.groupBox1);
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "Form1";
             this.Text = "PCB Document Creator";
