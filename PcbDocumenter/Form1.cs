@@ -77,7 +77,7 @@ namespace PCB_Documenter
 
         /// <summary>
         /// Determines whether or not the Gen DOc button was pressed (if were on that screen). Warns the user
-        /// if not. 
+        /// if not.
         /// </summary>
         /// <returns>true if its OK to navigate away from current screen; false otherwise</returns>
         private Boolean CheckDocGeneration()
@@ -131,7 +131,7 @@ namespace PCB_Documenter
                 // what screens are available
                 m_ActiveScreenIndex = 0;
 
-                // the only case thats not handled here is when both checkboxes are deselected. in which 
+                // the only case thats not handled here is when both checkboxes are deselected. in which
                 // case the ValidateInfo() function will fail
                 if (cBoxPCB.Checked)
                 {
@@ -263,11 +263,11 @@ namespace PCB_Documenter
                 }
                 else
                 {
-                    // Special renaming is required for Assembly package docs 
+                    // Special renaming is required for Assembly package docs
                     String appendPrefix = "";
                     String prefix = prefixExtension[0].ToUpper();
                     String ext = prefixExtension[1].ToUpper();
-                    if ((prefix == "BILL OF MATERIALS") && (ext == "XLS"))
+                    if ((prefix == "BILL OF MATERIALS") && ((ext == "XLS") || (ext == "XLXS")))
                     {
                         appendPrefix = " BOM";
                     }
@@ -507,7 +507,7 @@ namespace PCB_Documenter
             new FileDescription { type = "*.gbs",                   description = "Bottom Soldermask"},
             new FileDescription { type = "*.gtp",                   description = "Top Paste"},
             new FileDescription { type = "*.gbp",                   description = "Bottom Paste"},
-            new FileDescription { type = "*.gko",                   description = "Board outline"},
+            new FileDescription { type = "*.gm1",                   description = "Board outline"},
             new FileDescription { type = "NC Drill.TXT",            description = "RS-274X Drill Data (Through Holes)"},
             new FileDescription { type = "NC Drill-RoundHoles.TXT", description = "RS-274X Drill Data (Through Holes)"},
             new FileDescription { type = "NC Drill-SlotHoles.TXT",  description = "RS-274X Slot Data"},
@@ -523,6 +523,7 @@ namespace PCB_Documenter
             new FileDescription { type = "Schematic Prints.PDF",    description = "Schematic"},
             new FileDescription { type = "Assembly Drawings.PDF",   description = "Assembly Drawing"},
             new FileDescription { type = "Bill of Materials.XLS",   description = "Bill of Materials"},
+            new FileDescription { type = "Bill of Materials.XLSX",  description = "Bill of Materials"},
         };
 
         private void ManageCheckGroupBox(CheckBox chk, GroupBox grp)
@@ -566,8 +567,22 @@ namespace PCB_Documenter
 
                 if (f.type == "*PCB FAB.zip")
                 {
-                    files = System.IO.Directory.GetFiles(directory, f.type, SearchOption.AllDirectories).Select(fileName => Path.GetFileName(fileName)).ToArray();
-                    dirs = System.IO.Directory.GetFiles(directory, f.type, SearchOption.AllDirectories).Select(fileName => Path.GetDirectoryName(fileName)).ToArray();
+                    // Per Tom's request, find the newest file only for "*PCB FAB.zip"
+                    var myFiles = new DirectoryInfo(directory).GetFiles(f.type, SearchOption.AllDirectories);
+                    FileInfo mostRecentFile = null;
+                    DateTime dtFile = DateTime.MinValue;
+
+                    foreach (FileInfo fi in myFiles)
+                    {
+                        if (fi.LastWriteTime > dtFile)
+                        {
+                            mostRecentFile = fi;
+                            dtFile = fi.LastWriteTime;
+                        }
+                    }
+
+                    files = new String[] { mostRecentFile.Name };
+                    dirs = new String[] { mostRecentFile.DirectoryName };
                 }
                 else
                 {
@@ -667,6 +682,7 @@ namespace PCB_Documenter
 
         // Screen #3
         private List<UpdatedFiles> m_DatagridItems = new List<UpdatedFiles>();
+
         private BindingSource m_BindingSource;
 
         private void DataGridUpdate()
@@ -790,7 +806,7 @@ namespace PCB_Documenter
             System.IO.File.Copy(o, n, true);
 
             System.Diagnostics.Process np = System.Diagnostics.Process.Start("notepad.exe", m_OutputDirectory + "\\DocGen\\ReadMe.txt");
-            
+
             // Sleep needed so that directory isn't deleted prior to notepad having a chance to open readme.txt
             System.Threading.Thread.Sleep(500);
 
@@ -821,7 +837,7 @@ namespace PCB_Documenter
 
             foreach (ListViewItem l in listViewInclude.Items)
             {
-                           // Directory                                   Filename
+                // Directory                                   Filename
                 String origFile = dataGridView1.Rows[i].Cells[2].Value + "\\" + dataGridView1.Rows[i].Cells[3].Value;
                 String newFile = m_OutputDirectory + "\\DocGen\\" + dataGridView1.Rows[i].Cells[0].Value;
 
@@ -924,7 +940,6 @@ namespace PCB_Documenter
             XMLInterface.SerializeToXML(pcb, name);
         }
 
-
         private void openToolStripMenuItem_Click(object sender, EventArgs e)
         {
             // Get the XML settings file
@@ -1018,7 +1033,7 @@ namespace PCB_Documenter
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -1028,7 +1043,7 @@ namespace PCB_Documenter
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
